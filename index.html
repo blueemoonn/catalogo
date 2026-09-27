@@ -54,6 +54,7 @@
             cursor: pointer;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            touch-action: none;
         }
         .favorite-swipe-track.active-fav {
             background: rgba(239, 68, 68, 0.15);
@@ -71,12 +72,7 @@
             justify-content: center;
             color: #ffffff;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
             z-index: 10;
-        }
-        .favorite-swipe-track.active-fav .favorite-swipe-thumb {
-            transform: translateX(calc(var(--track-width, 240px) - 44px));
-            background: #ef4444;
         }
         .favorite-swipe-text {
             width: 100%;
@@ -420,7 +416,7 @@
                     </div>
                 </div>
 
-                <!-- Nota & Swipe "Favoritei" 100% Funcional -->
+                <!-- Nota & Swipe "Favoritei" -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Nota</label>
@@ -432,9 +428,9 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Toque para Alternar)</label>
-                        <!-- Componente Swipe Simplificado e Definitivo -->
-                        <div id="modal-favorite-swipe" class="favorite-swipe-track" onclick="window.toggleFavoriteSwipe()">
+                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
+                        <!-- Componente Swipe Funcional -->
+                        <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
                             <div class="favorite-swipe-thumb">
                                 <i class="fa-solid fa-heart text-xs"></i>
@@ -524,23 +520,38 @@
         let currentCategory = 'all';
         let tempCoverBase64 = '';
 
-        // Controlo Definitivo do Estado de Favorito
-        window.setFavoriteSwipeState = (isFav) => {
+        // --- CONTROLO DO SWIPE DE FAVORITO NO FORMULÁRIO ---
+        let isSwiping = false;
+        let startSwipeX = 0;
+        let currentSwipeX = 0;
+
+        window.setFavoriteSwipeState = (isFav, triggerAnimation = true) => {
             const track = document.getElementById('modal-favorite-swipe');
             const label = document.getElementById('favorite-swipe-label');
-            if (!track) return;
+            const thumb = track ? track.querySelector('.favorite-swipe-thumb') : null;
+            if (!track || !thumb) return;
 
             const trackWidth = track.clientWidth || 260;
+            const maxTranslate = trackWidth - 44; 
+
             track.style.setProperty('--track-width', `${trackWidth}px`);
+
+            if (!triggerAnimation) {
+                thumb.style.transition = 'none';
+            } else {
+                thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease';
+            }
 
             if (isFav) {
                 track.classList.add('active-fav');
                 track.setAttribute('data-is-favorite', 'true');
                 if (label) label.textContent = 'Favoritado!';
+                thumb.style.transform = `translateX(${maxTranslate}px)`;
             } else {
                 track.classList.remove('active-fav');
                 track.setAttribute('data-is-favorite', 'false');
                 if (label) label.textContent = 'Deslize para Favoritar';
+                thumb.style.transform = `translateX(0px)`;
             }
         };
 
@@ -548,8 +559,62 @@
             const track = document.getElementById('modal-favorite-swipe');
             if (!track) return;
             const current = track.getAttribute('data-is-favorite') === 'true';
-            window.setFavoriteSwipeState(!current);
+            window.setFavoriteSwipeState(!current, true);
         };
+
+        // Eventos de arrastar para o Swipe
+        document.addEventListener('DOMContentLoaded', () => {
+            const track = document.getElementById('modal-favorite-swipe');
+            if (!track) return;
+
+            const thumb = track.querySelector('.favorite-swipe-thumb');
+            if (!thumb) return;
+
+            track.addEventListener('pointerdown', (e) => {
+                isSwiping = true;
+                startSwipeX = e.clientX;
+                thumb.style.transition = 'none';
+                track.setPointerCapture(e.pointerId);
+                e.preventDefault();
+            });
+
+            track.addEventListener('pointermove', (e) => {
+                if (!isSwiping) return;
+                const trackWidth = track.clientWidth || 260;
+                const maxTranslate = trackWidth - 44;
+                
+                const diffX = e.clientX - startSwipeX;
+                currentSwipeX = Math.max(0, Math.min(diffX, maxTranslate));
+
+                thumb.style.transform = `translateX(${currentSwipeX}px)`;
+                
+                if (currentSwipeX > maxTranslate / 2) {
+                    track.classList.add('active-fav');
+                } else {
+                    track.classList.remove('active-fav');
+                }
+            });
+
+            track.addEventListener('pointerup', (e) => {
+                if (!isSwiping) return;
+                isSwiping = false;
+
+                const trackWidth = track.clientWidth || 260;
+                const maxTranslate = trackWidth - 44;
+
+                if (Math.abs(e.clientX - startSwipeX) < 5) {
+                    window.toggleFavoriteSwipe();
+                } else {
+                    const shouldBeFav = currentSwipeX >= (maxTranslate / 2);
+                    window.setFavoriteSwipeState(shouldBeFav, true);
+                }
+
+                currentSwipeX = 0;
+                if (track.hasPointerCapture(e.pointerId)) {
+                    track.releasePointerCapture(e.pointerId);
+                }
+            });
+        });
 
         const traduzirCategoria = (cat) => {
             const map = {
