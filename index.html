@@ -184,34 +184,49 @@
                 </button>
             </section>
 
+            <!-- Cards de Estatísticas Funcionais -->
             <section id="stats-section">
                 <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
-                    <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between shadow-xl">
+                    <div onclick="window.filterStoriesCard('all')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between shadow-xl cursor-pointer hover:border-blue-400 transition-all">
                         <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Total</p><h3 class="text-2xl font-extrabold text-white mt-0.5" id="stat-acervo">0</h3></div>
                         <div class="w-9 h-9 bg-blue-500/20 border border-blue-500/30 rounded-xl flex items-center justify-center text-blue-300"><i class="fa-solid fa-layer-group text-sm"></i></div>
                     </div>
-                    <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between">
+                    <div onclick="window.filterStoriesCard('completed')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-emerald-400 transition-all">
                         <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Concluídos</p><h3 class="text-2xl font-bold text-emerald-400 mt-0.5" id="stat-completed">0</h3></div>
                         <div class="w-9 h-9 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400"><i class="fa-solid fa-circle-check text-sm"></i></div>
                     </div>
-                    <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between">
+                    <div onclick="window.filterStoriesCard('in-progress')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-amber-400 transition-all">
                         <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Em Andamento</p><h3 class="text-2xl font-bold text-amber-400 mt-0.5" id="stat-in-progress">0</h3></div>
                         <div class="w-9 h-9 bg-amber-500/20 border border-amber-500/30 rounded-xl flex items-center justify-center text-amber-400"><i class="fa-solid fa-spinner text-sm"></i></div>
                     </div>
-                    <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between">
+                    <div onclick="window.filterStoriesCard('planned')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-sky-400 transition-all">
                         <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase" id="stat-planned-label">Quero Ver/Ler</p><h3 class="text-2xl font-bold text-sky-400 mt-0.5" id="stat-planned">0</h3></div>
                         <div class="w-9 h-9 bg-sky-500/20 border border-sky-500/30 rounded-xl flex items-center justify-center text-sky-400"><i class="fa-solid fa-bookmark text-sm"></i></div>
                     </div>
-                    <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between">
+                    <div onclick="window.filterStoriesCard('abandoned')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-rose-400 transition-all">
                         <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Abandonados</p><h3 class="text-2xl font-bold text-rose-400 mt-0.5" id="stat-abandoned">0</h3></div>
                         <div class="w-9 h-9 bg-rose-500/20 border border-rose-500/30 rounded-xl flex items-center justify-center text-rose-400"><i class="fa-solid fa-ban text-sm"></i></div>
                     </div>
-                    <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between">
+                    <div onclick="window.filterStoriesCard('favorites')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-rose-400 transition-all">
                         <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Favoritos</p><h3 class="text-2xl font-bold text-rose-400 mt-0.5" id="stat-favorites">0</h3></div>
                         <div class="w-9 h-9 bg-rose-500/20 border border-rose-500/30 rounded-xl flex items-center justify-center text-rose-400"><i class="fa-solid fa-heart text-sm"></i></div>
                     </div>
                 </div>
             </section>
+
+            <!-- Área Expansível / Container de Resultados do Filtro por Card -->
+            <div id="filter-results-container" class="hidden glass-card p-6 rounded-2xl border border-blue-500/40 shadow-2xl transition-all duration-300 space-y-4">
+                <div class="flex items-center justify-between border-b border-blue-900/40 pb-3">
+                    <h3 id="filter-results-title" class="text-base font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-filter text-blue-400"></i>
+                        <span id="filter-title-text">Filtrado</span>
+                    </h3>
+                    <button type="button" onclick="window.closeFilterResults()" class="text-gray-300 hover:text-white cursor-pointer px-2.5 py-1 bg-blue-950/60 rounded-lg text-xs">Fechar ✕</button>
+                </div>
+                <div id="filter-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <!-- Itens filtrados serão injetados aqui dinamicamente -->
+                </div>
+            </div>
 
             <section class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between">
                 <div class="relative w-full sm:w-1/2">
@@ -428,7 +443,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favoritei (Deslize)</label>
+                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
                         <!-- Componente Swipe Funcional -->
                         <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
@@ -595,27 +610,17 @@
                 }
             });
 
-                        track.addEventListener('pointerup', (e) => {
+            track.addEventListener('pointerup', (e) => {
                 if (!isSwiping) return;
                 isSwiping = false;
 
                 const trackWidth = track.clientWidth || 260;
                 const maxTranslate = trackWidth - 44;
-                const isCurrentlyFav = track.getAttribute('data-is-favorite') === 'true';
 
-                // Se o movimento foi menor que 5px, tratamos como um clique simples
                 if (Math.abs(e.clientX - startSwipeX) < 5) {
                     window.toggleFavoriteSwipe();
                 } else {
-                    // Se estava favorito e puxou para a esquerda (passando da metade de volta), desfavorita.
-                    // Se não estava, verifica se passou da metade para a direita para favoritar.
-                    let shouldBeFav;
-                    if (isCurrentlyFav) {
-                        // Para desfavoritar puxando para a esquerda, se o deslocamento for menor que a metade, desfavorita
-                        shouldBeFav = currentSwipeX >= (maxTranslate / 2);
-                    } else {
-                        shouldBeFav = currentSwipeX >= (maxTranslate / 2);
-                    }
+                    const shouldBeFav = currentSwipeX >= (maxTranslate / 2);
                     window.setFavoriteSwipeState(shouldBeFav, true);
                 }
 
@@ -624,7 +629,6 @@
                     track.releasePointerCapture(e.pointerId);
                 }
             });
-
         });
 
         const traduzirCategoria = (cat) => {
@@ -922,6 +926,7 @@
         window.switchCategory = (cat) => {
             currentCategory = cat;
             window.closeSidebar();
+            window.closeFilterResults();
             window.updateStats();
             window.renderMediaGrid();
         };
@@ -1047,6 +1052,84 @@
                 `;
                 grid.appendChild(card);
             });
+        };
+
+        // --- FUNÇÕES DE FILTRAGEM DOS CARDS DE ESTATÍSTICA ---
+        window.filterStoriesCard = (filterType) => {
+            const container = document.getElementById('filter-results-container');
+            const titleText = document.getElementById('filter-title-text');
+            const grid = document.getElementById('filter-results-grid');
+            if (!container || !grid) return;
+
+            // Pega os itens da categoria atual (seja "all", "anime", etc.)
+            let baseList = mediaItems;
+            if (currentCategory === 'favorites') {
+                baseList = mediaItems.filter(i => i.favorite);
+            } else if (currentCategory !== 'all') {
+                baseList = mediaItems.filter(i => i.category === currentCategory);
+            }
+
+            let filtered = [];
+            let labelName = '';
+
+            switch (filterType) {
+                case 'all':
+                    filtered = baseList;
+                    labelName = 'Total de Itens';
+                    break;
+                case 'completed':
+                    filtered = baseList.filter(i => i.status === 'completed');
+                    labelName = 'Itens Concluídos';
+                    break;
+                case 'in-progress':
+                    filtered = baseList.filter(i => i.status === 'in-progress');
+                    labelName = 'Itens Em Andamento';
+                    break;
+                case 'planned':
+                    filtered = baseList.filter(i => i.status === 'planned');
+                    labelName = currentCategory === 'book' ? 'Quero Ler' : 'Quero Ver';
+                    break;
+                case 'abandoned':
+                    filtered = baseList.filter(i => i.status === 'abandoned');
+                    labelName = 'Itens Abandonados';
+                    break;
+                case 'favorites':
+                    filtered = baseList.filter(i => i.favorite);
+                    labelName = 'Itens Favoritos';
+                    break;
+            }
+
+            titleText.innerText = `${labelName} (${filtered.length})`;
+            grid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-blue-300/70">Nenhuma obra encontrada nesta categoria.</div>`;
+            } else {
+                filtered.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'glass-card rounded-xl overflow-hidden shadow-lg border border-blue-500/25 flex flex-col cursor-pointer hover:border-blue-400/65 transition';
+                    card.onclick = () => window.openDetailsModal(item.id);
+                    card.innerHTML = `
+                        <div class="relative aspect-[2/3] bg-blue-950/40">
+                            <img class="w-full h-full object-cover" src="${item.cover}" alt="${item.title}">
+                            ${item.favorite ? '<span class="absolute top-2 right-2 text-rose-400 text-sm drop-shadow-md">❤️</span>' : ''}
+                        </div>
+                        <div class="p-3 flex-1 flex flex-col justify-between">
+                            <h4 class="font-bold text-sm text-white truncate">${item.title}</h4>
+                            ${item.rating ? `<span class="text-[11px] text-blue-300 font-semibold mt-1 flex items-center space-x-1"><span>🌕</span><span>${item.rating} / 10</span></span>` : ''}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            container.classList.remove('hidden');
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        window.closeFilterResults = () => {
+            const container = document.getElementById('filter-results-container');
+            if (container) container.classList.add('hidden');
         };
 
         window.openDetailsModal = (id) => {
