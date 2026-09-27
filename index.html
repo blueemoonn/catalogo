@@ -827,7 +827,6 @@
             setVal('stat-abandoned', list.filter(i => i.status === 'abandoned').length);
             setVal('stat-favorites', list.filter(i => i.favorite).length);
 
-            // Regra exata solicitada: "Quero Ler" apenas na aba livros, "Quero Ver" nas outras categorias, e "Quero Ver/Ler" no Início e Favoritos
             const plannedLabelEl = document.getElementById('stat-planned-label');
             if (plannedLabelEl) {
                 if (currentCategory === 'book') {
