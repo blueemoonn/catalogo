@@ -39,7 +39,7 @@
         .modal-animate-in { animation: modalFadeIn 0.2s ease-out forwards; }
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* Estilos do Swipe de Coração ("Favoritei") Corrigidos */
+        /* Estilos do Swipe de Coração ("Favoritei") Totalmente Corrigidos */
         .favorite-swipe-track {
             position: relative;
             width: 100%;
@@ -49,7 +49,7 @@
             overflow: hidden;
             display: flex;
             align-items: center;
-            padding: 3px;
+            padding: 4px;
             border: 1px solid rgba(59, 130, 246, 0.3);
             user-select: none;
             touch-action: none;
@@ -60,9 +60,9 @@
         }
         .favorite-swipe-thumb {
             position: absolute;
-            left: 3px;
-            width: 38px;
-            height: 38px;
+            left: 4px;
+            width: 36px;
+            height: 36px;
             background: #2563eb;
             border-radius: 50%;
             display: flex;
@@ -70,7 +70,6 @@
             justify-content: center;
             color: #ffffff;
             cursor: grab;
-            transition: background 0.2s;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
             z-index: 10;
             will-change: transform;
@@ -436,7 +435,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito</label>
-                        <!-- Componente Swipe "Favoritei" Corrigido -->
+                        <!-- Componente Swipe "Favoritei" Refatorado -->
                         <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text">Deslize para Favoritar</div>
                             <div class="favorite-swipe-thumb">
@@ -527,95 +526,89 @@
         let currentCategory = 'all';
         let tempCoverBase64 = '';
 
-        // Função reutilizável e corrigida do Swipe "Favoritei"
+        // Lógica de Swipe Corrigida e Robusta
         function initFavoriteSwipe(trackElement, initialFavState = false) {
             if (!trackElement) return;
-            let isDragging = false;
-            let startX = 0;
-            let currentTranslate = 0;
-            let maxTranslate = 0;
-
+            
             const thumb = trackElement.querySelector('.favorite-swipe-thumb');
             const textElement = trackElement.querySelector('.favorite-swipe-text');
             
             trackElement.setAttribute('data-is-favorite', initialFavState ? 'true' : 'false');
 
-            function getMaxTranslate() {
-                return Math.max(10, trackElement.clientWidth - thumb.clientWidth - 6);
-            }
-
-            function updateVisualState(favorite, animate = true) {
-                maxTranslate = getMaxTranslate();
-                if (favorite) {
+            function updateUI(isFav, animate = true) {
+                const maxTranslate = Math.max(10, trackElement.clientWidth - thumb.clientWidth - 8);
+                if (animate) thumb.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                if (isFav) {
                     trackElement.classList.add('active-fav');
                     textElement.textContent = 'Favoritado!';
-                    currentTranslate = maxTranslate;
-                    if (animate) thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                     thumb.style.transform = `translateX(${maxTranslate}px)`;
                 } else {
                     trackElement.classList.remove('active-fav');
                     textElement.textContent = 'Deslize para Favoritar';
-                    currentTranslate = 0;
-                    if (animate) thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                     thumb.style.transform = `translateX(0px)`;
                 }
             }
 
-            updateVisualState(initialFavState, false);
+            updateUI(initialFavState, false);
 
-            function handleResize() {
-                maxTranslate = getMaxTranslate();
-                if (trackElement.getAttribute('data-is-favorite') === 'true') {
-                    currentTranslate = maxTranslate;
-                    thumb.style.transform = `translateX(${maxTranslate}px)`;
-                }
-            }
+            let isDragging = false;
+            let startX = 0;
+            let currentX = 0;
 
-            window.addEventListener('resize', handleResize);
-            setTimeout(handleResize, 50);
-
-            function dragStart(e) {
+            function onStart(e) {
                 isDragging = true;
-                startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                startX = (e.touches ? e.touches[0].clientX : e.clientX);
                 thumb.style.transition = 'none';
-                maxTranslate = getMaxTranslate();
+                e.preventDefault();
             }
 
-            function dragMove(e) {
+            function onMove(e) {
                 if (!isDragging) return;
-                const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-                const diffX = currentX - startX;
+                currentX = (e.touches ? e.touches[0].clientX : e.clientX);
+                const diff = currentX - startX;
+                const maxTranslate = Math.max(10, trackElement.clientWidth - thumb.clientWidth - 8);
+                const isFavCurrently = trackElement.getAttribute('data-is-favorite') === 'true';
 
-                let baseOffset = trackElement.getAttribute('data-is-favorite') === 'true' ? maxTranslate : 0;
-                currentTranslate = Math.max(0, Math.min(maxTranslate, baseOffset + diffX));
+                let basePos = isFavCurrently ? maxTranslate : 0;
+                let newPos = basePos + diff;
 
-                thumb.style.transform = `translateX(${currentTranslate}px)`;
+                newPos = Math.max(0, Math.min(maxTranslate, newPos));
+                thumb.style.transform = `translateX(${newPos}px)`;
             }
 
-            function dragEnd() {
+            function onEnd() {
                 if (!isDragging) return;
                 isDragging = false;
-                maxTranslate = getMaxTranslate();
+                const maxTranslate = Math.max(10, trackElement.clientWidth - thumb.clientWidth - 8);
+                
+                // Extrai a posição atual baseada no transform matrix ou offset atual
+                const matrix = window.getComputedStyle(thumb).transform;
+                let currentTranslateX = 0;
+                if (matrix && matrix !== 'none') {
+                    const values = matrix.split(',').map(parseFloat);
+                    currentTranslateX = values[4] || 0;
+                }
 
-                let isFav = currentTranslate > maxTranslate / 2;
-                trackElement.setAttribute('data-is-favorite', isFav ? 'true' : 'false');
-                updateVisualState(isFav, true);
+                // Se passou da metade do caminho, marca como favorito; caso contrário, desfavorita
+                const shouldBeFav = currentTranslateX > (maxTranslate / 2);
+                trackElement.setAttribute('data-is-favorite', shouldBeFav ? 'true' : 'false');
+                updateUI(shouldBeFav, true);
             }
 
-            // Remove antigos listeners para evitar duplicação se re-inicializado
-            thumb.replaceWith(thumb.cloneNode(true));
-            const newThumb = trackElement.querySelector('.favorite-swipe-thumb');
+            // Limpa handlers antigos clonando o elemento
+            const newThumb = thumb.cloneNode(true);
+            thumb.parentNode.replaceChild(newThumb, thumb);
 
-            newThumb.addEventListener('mousedown', dragStart);
-            window.addEventListener('mousemove', dragMove);
-            window.addEventListener('mouseup', dragEnd);
+            newThumb.addEventListener('mousedown', onStart);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
 
-            newThumb.addEventListener('touchstart', dragStart, { passive: true });
-            window.addEventListener('touchmove', dragMove, { passive: true });
-            window.addEventListener('touchend', dragEnd);
+            newThumb.addEventListener('touchstart', onStart, { passive: false });
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onEnd);
         }
 
-        // Inicializar o swipe no carregamento da página
         document.addEventListener('DOMContentLoaded', () => {
             const swipeEl = document.getElementById('modal-favorite-swipe');
             if (swipeEl) initFavoriteSwipe(swipeEl, false);
