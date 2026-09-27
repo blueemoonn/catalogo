@@ -32,17 +32,17 @@
         }
     </script>
     <style>
-        /* Estilos personalizados para o Swipe de Coração ("Favoritei") */
+        /* Estilos do Swipe de Coração ("Favoritei") */
         .favorite-swipe-track {
             position: relative;
             width: 100%;
-            height: 48px;
+            height: 44px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 9999px;
             overflow: hidden;
             display: flex;
             align-items: center;
-            padding: 4px;
+            padding: 3px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             user-select: none;
             touch-action: none;
@@ -53,9 +53,9 @@
         }
         .favorite-swipe-thumb {
             position: absolute;
-            left: 4px;
-            width: 40px;
-            height: 40px;
+            left: 3px;
+            width: 38px;
+            height: 38px;
             background: #1f2937;
             border-radius: 50%;
             display: flex;
@@ -77,7 +77,7 @@
         .favorite-swipe-text {
             width: 100%;
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             color: #9ca3af;
             letter-spacing: 0.05em;
@@ -91,7 +91,7 @@
 </head>
 <body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col selection:bg-brand-accent selection:text-white">
 
-    <!-- HEADER / BARRA DE AUTENTICAÇÃO -->
+    <!-- HEADER / AUTENTICAÇÃO -->
     <header class="border-b border-slate-800 bg-brand-dark/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -109,28 +109,139 @@
 
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
-        <div class="mb-8">
-            <h2 class="text-3xl font-cinzel font-bold mb-2">Santuário de Histórias</h2>
-            <p class="text-slate-400 text-sm">Gerencie o seu acervo pessoal com o novo sistema interativo de deslize.</p>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h2 class="text-3xl font-cinzel font-bold mb-2">Sanctuary of Stories</h2>
+                <p class="text-slate-400 text-sm">Explore o seu acervo pessoal com o novo controlo de favoritos.</p>
+            </div>
+            <button onclick="openAddModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-blue-600/20 transition flex items-center space-x-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Adicionar Obra</span>
+            </button>
         </div>
 
-        <!-- EXEMPLO DE INTEGRAÇÃO DO COMPONENTE "FAVORITEI" NO MODAL / CARTÃO -->
-        <div class="bg-brand-card border border-slate-800 rounded-2xl p-6 max-w-md shadow-xl">
-            <h3 class="font-cinzel text-lg font-bold mb-4 text-slate-200">Exemplo de Ação "Favoritei"</h3>
-            <p class="text-sm text-slate-400 mb-6">Arraste o botão de coração para a direita para marcar esta obra como favorita.</p>
-            
-            <!-- Componente Swipe "Favoritei" -->
-            <div id="demo-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
-                <div class="favorite-swipe-text">Deslize para Favoritar</div>
-                <div class="favorite-swipe-thumb">
-                    <i class="fa-solid fa-heart text-sm"></i>
-                </div>
+        <!-- ESTATÍSTICAS -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-brand-card border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Total</p>
+                <p id="stat-total" class="text-2xl font-bold text-white">0</p>
             </div>
+            <div class="bg-brand-card border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Concluídos</p>
+                <p id="stat-completed" class="text-2xl font-bold text-emerald-400">0</p>
+            </div>
+            <div class="bg-brand-card border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Em Andamento</p>
+                <p id="stat-progress" class="text-2xl font-bold text-amber-400">0</p>
+            </div>
+            <div class="bg-brand-card border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Planeados</p>
+                <p id="stat-planned" class="text-2xl font-bold text-blue-400">0</p>
+            </div>
+            <div class="bg-brand-card border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Abandonados</p>
+                <p id="stat-dropped" class="text-2xl font-bold text-rose-400">0</p>
+            </div>
+            <div class="bg-brand-card border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Favoritos</p>
+                <p id="stat-favorites" class="text-2xl font-bold text-red-400">0</p>
+            </div>
+        </div>
+
+        <!-- FILTROS E PESQUISA -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+            <div class="relative flex-grow">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" placeholder="Pesquisar obras..." class="w-full bg-brand-card border border-slate-800 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-brand-accent transition">
+            </div>
+            <select id="category-filter" class="bg-brand-card border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-accent transition text-slate-300">
+                <option value="all">Todas as Categorias</option>
+                <option value="anime">Animes</option>
+                <option value="manga">Mangás / Curtas</option>
+                <option value="dorama">Dramas (Doramas)</option>
+                <option value="movie">Filmes</option>
+                <option value="book">Livros</option>
+                <option value="series">Séries</option>
+            </select>
+        </div>
+
+        <!-- GRELHA DE OBRAS -->
+        <div id="stories-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Os cards injetados via JavaScript aparecerão aqui -->
         </div>
     </main>
 
-    <!-- SCRIPT DE LÓGICA DO SWIPE "FAVORITEI" -->
+    <!-- MODAL DE ADICIONAR / EDITAR -->
+    <div id="story-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-brand-card border border-slate-800 w-full max-w-2xl rounded-3xl p-6 my-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modal-title" class="font-cinzel text-xl font-bold text-white">Adicionar Nova Obra</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <form id="story-form" class="space-y-4">
+                <input type="hidden" id="story-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Título</label>
+                        <input type="text" id="form-title" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-accent">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Categoria</label>
+                        <select id="form-category" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-accent text-slate-300">
+                            <option value="anime">Anime</option>
+                            <option value="manga">Mangá / Curta</option>
+                            <option value="dorama">Dorama</option>
+                            <option value="movie">Filme</option>
+                            <option value="book">Livro</option>
+                            <option value="series">Série</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Estado</label>
+                        <select id="form-status" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-accent text-slate-300">
+                            <option value="completed">Concluído</option>
+                            <option value="progress">Em Andamento</option>
+                            <option value="planned">Planeado</option>
+                            <option value="dropped">Abandonado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">URL da Capa (ou upload)</label>
+                        <input type="text" id="form-image" placeholder="https://..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-accent">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Sinopse / Descrição</label>
+                    <textarea id="form-synopsis" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-accent resize-none"></textarea>
+                </div>
+
+                <!-- CAMPO DO "FAVORITEI" DENTRO DO FORMULÁRIO DE EDIÇÃO/CRIAÇÃO -->
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2 font-semibold">Marcador de Favorito</label>
+                    <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
+                        <div class="favorite-swipe-text">Deslize para Favoritar</div>
+                        <div class="favorite-swipe-thumb">
+                            <i class="fa-solid fa-heart text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-accent hover:bg-blue-600 text-white text-sm font-medium transition shadow-lg shadow-blue-500/20">Guardar Obra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE GERENCIAMENTO E DO SWIPE "FAVORITEI" -->
     <script>
+        // Função reutilizável do Swipe "Favoritei"
         function initFavoriteSwipe(trackElement, onToggleCallback) {
             let isDragging = false;
             let startX = 0;
@@ -140,7 +251,6 @@
             const thumb = trackElement.querySelector('.favorite-swipe-thumb');
             const textElement = trackElement.querySelector('.favorite-swipe-text');
             
-            // Estado Inicial baseado no atributo
             let isFav = trackElement.getAttribute('data-is-favorite') === 'true';
             updateVisualState(isFav, false);
 
@@ -156,9 +266,8 @@
                 }
             }
 
-            // Recalcula o espaço máximo de arraste
             function updateDimensions() {
-                maxTranslate = trackElement.clientWidth - thumb.clientWidth - 8; // considerando o padding
+                maxTranslate = trackElement.clientWidth - thumb.clientWidth - 6;
                 if (trackElement.getAttribute('data-is-favorite') === 'true') {
                     thumb.style.transform = `translateX(${maxTranslate}px)`;
                 }
@@ -167,7 +276,6 @@
             window.addEventListener('resize', updateDimensions);
             setTimeout(updateDimensions, 50);
 
-            // Eventos de Mouse e Toque
             function dragStart(e) {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
@@ -192,7 +300,6 @@
 
                 let currentlyFav = trackElement.getAttribute('data-is-favorite') === 'true';
                 
-                // Se arrastou mais de 50% do caminho, alterna o estado
                 if (currentTranslate > maxTranslate / 2) {
                     isFav = true;
                     trackElement.setAttribute('data-is-favorite', 'true');
@@ -218,14 +325,26 @@
             window.addEventListener('touchend', dragEnd);
         }
 
-        // Inicialização do componente de demonstração
+        // Lógica de Modais e Dados de Exemplo
+        function openAddModal() {
+            document.getElementById('story-modal').classList.remove('hidden');
+            document.getElementById('modal-title').textContent = 'Adicionar Nova Obra';
+            document.getElementById('story-form').reset();
+            document.getElementById('story-id').value = '';
+            
+            const swipeEl = document.getElementById('modal-favorite-swipe');
+            swipeEl.setAttribute('data-is-favorite', 'false');
+            initFavoriteSwipe(swipeEl);
+        }
+
+        function closeModal() {
+            document.getElementById('story-modal').classList.add('hidden');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            const demoSwipe = document.getElementById('demo-favorite-swipe');
-            if (demoSwipe) {
-                initFavoriteSwipe(demoSwipe, (isFavorite) => {
-                    console.log("Estado do favorito alterado:", isFavorite);
-                    // Aqui pode colocar a lógica para atualizar o Firebase ou o estado global da obra
-                });
+            const modalSwipe = document.getElementById('modal-favorite-swipe');
+            if (modalSwipe) {
+                initFavoriteSwipe(modalSwipe);
             }
         });
     </script>
