@@ -39,7 +39,7 @@
         .modal-animate-in { animation: modalFadeIn 0.2s ease-out forwards; }
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* Estilos do Swipe de Coração ("Favoritei") */
+        /* Estilos do Swipe de Coração ("Favoritei") Corrigidos */
         .favorite-swipe-track {
             position: relative;
             width: 100%;
@@ -70,9 +70,10 @@
             justify-content: center;
             color: #ffffff;
             cursor: grab;
-            transition: background 0.2s, color 0.2s;
+            transition: background 0.2s;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
             z-index: 10;
+            will-change: transform;
         }
         .favorite-swipe-track.active-fav .favorite-swipe-thumb {
             background: #ef4444;
@@ -435,7 +436,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito</label>
-                        <!-- Componente Swipe "Favoritei" Integrado -->
+                        <!-- Componente Swipe "Favoritei" Corrigido -->
                         <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text">Deslize para Favoritar</div>
                             <div class="favorite-swipe-thumb">
@@ -526,7 +527,7 @@
         let currentCategory = 'all';
         let tempCoverBase64 = '';
 
-        // Função reutilizável do Swipe "Favoritei"
+        // Função reutilizável e corrigida do Swipe "Favoritei"
         function initFavoriteSwipe(trackElement, initialFavState = false) {
             if (!trackElement) return;
             let isDragging = false;
@@ -538,34 +539,46 @@
             const textElement = trackElement.querySelector('.favorite-swipe-text');
             
             trackElement.setAttribute('data-is-favorite', initialFavState ? 'true' : 'false');
-            updateVisualState(initialFavState, false);
+
+            function getMaxTranslate() {
+                return Math.max(10, trackElement.clientWidth - thumb.clientWidth - 6);
+            }
 
             function updateVisualState(favorite, animate = true) {
+                maxTranslate = getMaxTranslate();
                 if (favorite) {
                     trackElement.classList.add('active-fav');
                     textElement.textContent = 'Favoritado!';
-                    if (animate) thumb.style.transform = `translateX(${maxTranslate}px)`;
+                    currentTranslate = maxTranslate;
+                    if (animate) thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    thumb.style.transform = `translateX(${maxTranslate}px)`;
                 } else {
                     trackElement.classList.remove('active-fav');
                     textElement.textContent = 'Deslize para Favoritar';
-                    if (animate) thumb.style.transform = `translateX(0px)`;
+                    currentTranslate = 0;
+                    if (animate) thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    thumb.style.transform = `translateX(0px)`;
                 }
             }
 
-            function updateDimensions() {
-                maxTranslate = trackElement.clientWidth - thumb.clientWidth - 6;
+            updateVisualState(initialFavState, false);
+
+            function handleResize() {
+                maxTranslate = getMaxTranslate();
                 if (trackElement.getAttribute('data-is-favorite') === 'true') {
+                    currentTranslate = maxTranslate;
                     thumb.style.transform = `translateX(${maxTranslate}px)`;
                 }
             }
 
-            window.addEventListener('resize', updateDimensions);
-            setTimeout(updateDimensions, 50);
+            window.addEventListener('resize', handleResize);
+            setTimeout(handleResize, 50);
 
             function dragStart(e) {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
                 thumb.style.transition = 'none';
+                maxTranslate = getMaxTranslate();
             }
 
             function dragMove(e) {
@@ -582,12 +595,11 @@
             function dragEnd() {
                 if (!isDragging) return;
                 isDragging = false;
-                thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                maxTranslate = getMaxTranslate();
 
                 let isFav = currentTranslate > maxTranslate / 2;
                 trackElement.setAttribute('data-is-favorite', isFav ? 'true' : 'false');
                 updateVisualState(isFav, true);
-                currentTranslate = isFav ? maxTranslate : 0;
             }
 
             // Remove antigos listeners para evitar duplicação se re-inicializado
