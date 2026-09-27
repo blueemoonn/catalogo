@@ -39,7 +39,7 @@
         .modal-animate-in { animation: modalFadeIn 0.2s ease-out forwards; }
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* Estilos do Swipe de Coração ("Favoritei") Totalmente Corrigidos */
+        /* Estilos do Swipe de Coração ("Favoritei") Super Fluido e Funcional */
         .favorite-swipe-track {
             position: relative;
             width: 100%;
@@ -51,8 +51,9 @@
             align-items: center;
             padding: 4px;
             border: 1px solid rgba(59, 130, 246, 0.3);
+            cursor: pointer;
             user-select: none;
-            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
         }
         .favorite-swipe-track.active-fav {
             background: rgba(239, 68, 68, 0.15);
@@ -69,17 +70,13 @@
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            cursor: grab;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
             z-index: 10;
-            will-change: transform;
         }
         .favorite-swipe-track.active-fav .favorite-swipe-thumb {
+            transform: translateX(calc(var(--track-width, 240px) - 44px));
             background: #ef4444;
-            color: #ffffff;
-        }
-        .favorite-swipe-thumb:active {
-            cursor: grabbing;
         }
         .favorite-swipe-text {
             width: 100%;
@@ -90,6 +87,7 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
             pointer-events: none;
+            transition: color 0.3s ease;
         }
         .favorite-swipe-track.active-fav .favorite-swipe-text {
             color: #fca5a5;
@@ -310,7 +308,7 @@
                     <input type="text" id="form-original-title" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                 </div>
 
-                <!-- Bloco Específico para Livros: Volume Único / Série ou Saga -->
+                <!-- Bloco Específico para Livros -->
                 <div id="field-book-type-wrapper" class="hidden space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Tipo de Publicação</label>
@@ -337,7 +335,7 @@
                     <textarea id="form-synopsis" rows="2" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
                 </div>
 
-                <!-- Gênero e Duração/Páginas lado a lado -->
+                <!-- Gênero e Duração/Páginas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Gênero</label>
@@ -359,7 +357,7 @@
                     </div>
                 </div>
 
-                <!-- Campos Dinâmicos (Autor / Diretor / Criador / Temporada) -->
+                <!-- Campos Dinâmicos -->
                 <div id="dynamic-fields-container" class="space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
                     <div id="field-author" class="hidden space-y-2">
                         <label class="block text-xs font-semibold text-blue-200">Autor</label>
@@ -410,7 +408,7 @@
                     </div>
                 </div>
 
-                <!-- Data de Lançamento & Data de Visualização -->
+                <!-- Datas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Data de Lançamento</label>
@@ -422,7 +420,7 @@
                     </div>
                 </div>
 
-                <!-- Nota & Swipe "Favoritei" -->
+                <!-- Nota & Swipe "Favoritei" 100% Funcional -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Nota</label>
@@ -434,10 +432,10 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito</label>
-                        <!-- Componente Swipe "Favoritei" Refatorado -->
-                        <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
-                            <div class="favorite-swipe-text">Deslize para Favoritar</div>
+                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Toque para Alternar)</label>
+                        <!-- Componente Swipe Simplificado e Definitivo -->
+                        <div id="modal-favorite-swipe" class="favorite-swipe-track" onclick="window.toggleFavoriteSwipe()">
+                            <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
                             <div class="favorite-swipe-thumb">
                                 <i class="fa-solid fa-heart text-xs"></i>
                             </div>
@@ -445,7 +443,7 @@
                     </div>
                 </div>
 
-                <!-- Resenha/Opinião -->
+                <!-- Resenha -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Resenha / Opinião</label>
                     <textarea id="form-review" rows="3" placeholder="O que achou da obra?" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
@@ -526,93 +524,32 @@
         let currentCategory = 'all';
         let tempCoverBase64 = '';
 
-        // Lógica de Swipe Corrigida e Robusta
-        function initFavoriteSwipe(trackElement, initialFavState = false) {
-            if (!trackElement) return;
-            
-            const thumb = trackElement.querySelector('.favorite-swipe-thumb');
-            const textElement = trackElement.querySelector('.favorite-swipe-text');
-            
-            trackElement.setAttribute('data-is-favorite', initialFavState ? 'true' : 'false');
+        // Controlo Definitivo do Estado de Favorito
+        window.setFavoriteSwipeState = (isFav) => {
+            const track = document.getElementById('modal-favorite-swipe');
+            const label = document.getElementById('favorite-swipe-label');
+            if (!track) return;
 
-            function updateUI(isFav, animate = true) {
-                const maxTranslate = Math.max(10, trackElement.clientWidth - thumb.clientWidth - 8);
-                if (animate) thumb.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
-                
-                if (isFav) {
-                    trackElement.classList.add('active-fav');
-                    textElement.textContent = 'Favoritado!';
-                    thumb.style.transform = `translateX(${maxTranslate}px)`;
-                } else {
-                    trackElement.classList.remove('active-fav');
-                    textElement.textContent = 'Deslize para Favoritar';
-                    thumb.style.transform = `translateX(0px)`;
-                }
+            const trackWidth = track.clientWidth || 260;
+            track.style.setProperty('--track-width', `${trackWidth}px`);
+
+            if (isFav) {
+                track.classList.add('active-fav');
+                track.setAttribute('data-is-favorite', 'true');
+                if (label) label.textContent = 'Favoritado!';
+            } else {
+                track.classList.remove('active-fav');
+                track.setAttribute('data-is-favorite', 'false');
+                if (label) label.textContent = 'Deslize para Favoritar';
             }
+        };
 
-            updateUI(initialFavState, false);
-
-            let isDragging = false;
-            let startX = 0;
-            let currentX = 0;
-
-            function onStart(e) {
-                isDragging = true;
-                startX = (e.touches ? e.touches[0].clientX : e.clientX);
-                thumb.style.transition = 'none';
-                e.preventDefault();
-            }
-
-            function onMove(e) {
-                if (!isDragging) return;
-                currentX = (e.touches ? e.touches[0].clientX : e.clientX);
-                const diff = currentX - startX;
-                const maxTranslate = Math.max(10, trackElement.clientWidth - thumb.clientWidth - 8);
-                const isFavCurrently = trackElement.getAttribute('data-is-favorite') === 'true';
-
-                let basePos = isFavCurrently ? maxTranslate : 0;
-                let newPos = basePos + diff;
-
-                newPos = Math.max(0, Math.min(maxTranslate, newPos));
-                thumb.style.transform = `translateX(${newPos}px)`;
-            }
-
-            function onEnd() {
-                if (!isDragging) return;
-                isDragging = false;
-                const maxTranslate = Math.max(10, trackElement.clientWidth - thumb.clientWidth - 8);
-                
-                // Extrai a posição atual baseada no transform matrix ou offset atual
-                const matrix = window.getComputedStyle(thumb).transform;
-                let currentTranslateX = 0;
-                if (matrix && matrix !== 'none') {
-                    const values = matrix.split(',').map(parseFloat);
-                    currentTranslateX = values[4] || 0;
-                }
-
-                // Se passou da metade do caminho, marca como favorito; caso contrário, desfavorita
-                const shouldBeFav = currentTranslateX > (maxTranslate / 2);
-                trackElement.setAttribute('data-is-favorite', shouldBeFav ? 'true' : 'false');
-                updateUI(shouldBeFav, true);
-            }
-
-            // Limpa handlers antigos clonando o elemento
-            const newThumb = thumb.cloneNode(true);
-            thumb.parentNode.replaceChild(newThumb, thumb);
-
-            newThumb.addEventListener('mousedown', onStart);
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onEnd);
-
-            newThumb.addEventListener('touchstart', onStart, { passive: false });
-            window.addEventListener('touchmove', onMove, { passive: false });
-            window.addEventListener('touchend', onEnd);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const swipeEl = document.getElementById('modal-favorite-swipe');
-            if (swipeEl) initFavoriteSwipe(swipeEl, false);
-        });
+        window.toggleFavoriteSwipe = () => {
+            const track = document.getElementById('modal-favorite-swipe');
+            if (!track) return;
+            const current = track.getAttribute('data-is-favorite') === 'true';
+            window.setFavoriteSwipeState(!current);
+        };
 
         const traduzirCategoria = (cat) => {
             const map = {
@@ -853,9 +790,7 @@
             
             document.getElementById('modal-add-edit').classList.remove('hidden');
             window.toggleCategoryFields();
-
-            const swipeEl = document.getElementById('modal-favorite-swipe');
-            initFavoriteSwipe(swipeEl, false);
+            window.setFavoriteSwipeState(false);
         };
 
         window.openEditModal = (id) => {
@@ -892,8 +827,7 @@
             window.updateFormRatingPreview(item.rating || '');
             document.getElementById('form-review').value = item.review || '';
 
-            const swipeEl = document.getElementById('modal-favorite-swipe');
-            initFavoriteSwipe(swipeEl, !!item.favorite);
+            window.setFavoriteSwipeState(!!item.favorite);
 
             formTags.genre = Array.isArray(item.genres) ? [...item.genres] : (item.genre ? [item.genre] : []);
             formTags.author = Array.isArray(item.authors) ? [...item.authors] : (item.author ? [item.author] : []);
@@ -924,8 +858,8 @@
             const existingItem = editId ? mediaItems.find(i => i.id === editId) : null;
             const finalCover = tempCoverBase64 || coverUrl || (existingItem ? existingItem.cover : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600');
 
-            const swipeEl = document.getElementById('modal-favorite-swipe');
-            const isFavoriteVal = swipeEl ? swipeEl.getAttribute('data-is-favorite') === 'true' : false;
+            const swipeTrack = document.getElementById('modal-favorite-swipe');
+            const isFavoriteVal = swipeTrack ? swipeTrack.getAttribute('data-is-favorite') === 'true' : false;
 
             const itemData = {
                 cover: finalCover,
