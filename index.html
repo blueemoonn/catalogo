@@ -428,7 +428,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
+                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favoritei (Deslize)</label>
                         <!-- Componente Swipe Funcional -->
                         <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
@@ -595,17 +595,27 @@
                 }
             });
 
-            track.addEventListener('pointerup', (e) => {
+                        track.addEventListener('pointerup', (e) => {
                 if (!isSwiping) return;
                 isSwiping = false;
 
                 const trackWidth = track.clientWidth || 260;
                 const maxTranslate = trackWidth - 44;
+                const isCurrentlyFav = track.getAttribute('data-is-favorite') === 'true';
 
+                // Se o movimento foi menor que 5px, tratamos como um clique simples
                 if (Math.abs(e.clientX - startSwipeX) < 5) {
                     window.toggleFavoriteSwipe();
                 } else {
-                    const shouldBeFav = currentSwipeX >= (maxTranslate / 2);
+                    // Se estava favorito e puxou para a esquerda (passando da metade de volta), desfavorita.
+                    // Se não estava, verifica se passou da metade para a direita para favoritar.
+                    let shouldBeFav;
+                    if (isCurrentlyFav) {
+                        // Para desfavoritar puxando para a esquerda, se o deslocamento for menor que a metade, desfavorita
+                        shouldBeFav = currentSwipeX >= (maxTranslate / 2);
+                    } else {
+                        shouldBeFav = currentSwipeX >= (maxTranslate / 2);
+                    }
                     window.setFavoriteSwipeState(shouldBeFav, true);
                 }
 
@@ -614,6 +624,7 @@
                     track.releasePointerCapture(e.pointerId);
                 }
             });
+
         });
 
         const traduzirCategoria = (cat) => {
