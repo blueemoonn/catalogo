@@ -8,12 +8,13 @@
     <title>Blue-Moon | Sanctuary of Stories</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Adicionada a fonte Gabriola do Google Fonts (ou fallback para a fonte do sistema) -->
+    <link href="https://fonts.googleapis.com/css2?family=Gabriola&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b1329; color: #f3f4f6; }
-        .hero-font { font-family: 'Cinzel', serif; letter-spacing: 0.15em; }
+        .hero-font { font-family: 'Plus Jakarta Sans', sans-serif; }
         .gabriola-title { 
-            font-family: 'Comic Sans MS', 'Comic Sans', cursive; 
+            font-family: 'Gabriola', 'Comic Sans MS', 'Comic Sans', cursive; 
             padding: 0 0.2em; 
             display: inline-block;
             font-weight: bold;
@@ -166,7 +167,8 @@
 
             <div class="max-w-5xl mx-auto flex flex-col items-center text-center space-y-4 pt-4">
                 <div class="space-y-3 pt-6">
-                    <h2 class="text-6xl sm:text-8xl md:text-9xl gabriola-title blue-silver-text tracking-normal">Blue-Moon</h2>
+                    <!-- Título atualizado com a classe gabriola-title -->
+                    <h2 class="text-7xl sm:text-9xl md:text-[10rem] gabriola-title blue-silver-text tracking-normal leading-none">Blue-Moon</h2>
                     <div class="flex items-center justify-center space-x-3 pt-2">
                         <span class="h-[1px] w-12 bg-gradient-to-r from-transparent to-blue-400/60"></span>
                         <p class="text-xs sm:text-sm font-medium silver-subtext uppercase">SANCTUARY OF STORIES</p>
@@ -618,7 +620,6 @@
             });
 
             track.addEventListener('click', (e) => {
-                // Se o usuário apenas clicar sem arrastar consideravelmente, alterna o estado
                 if (Math.abs(e.clientX - startSwipeX) < 5) {
                     window.toggleFavoriteSwipe();
                 }
