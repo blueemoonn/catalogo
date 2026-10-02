@@ -448,7 +448,7 @@
                         <div class="flex items-center space-x-2">
                             <input type="number" id="form-rating" min="0" max="10" step="0.5" placeholder="8.5" oninput="window.updateFormRatingPreview(this.value)" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                             <span id="form-rating-star" class="text-blue-300 font-semibold text-sm hidden flex items-center space-x-1 shrink-0">
-                                <span>🌕</span><span id="form-rating-val"></span>
+                                🌕 <span id="form-rating-val"></span>
                             </span>
                         </div>
                     </div>
@@ -473,14 +473,13 @@
         </div>
     </div>
 
-    <!-- SDKs do Firebase necessários para o botão de Login com Google funcionar -->
+    <!-- SDKs do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <!-- SCRIPT DA APLICAÇÃO -->
     <script>
-        // Configuração e Inicialização do Firebase (Caso utilize na sua conta, preencha os dados ou mantenha o fluxo integrado)
         const firebaseConfig = {
             apiKey: "AIzaSyD...",
             authDomain: "blue-moon-app.firebaseapp.com",
@@ -500,7 +499,6 @@
             console.log("Modo local ativo ou configuração pendente do Firebase.");
         }
 
-        // Estado Global
         let mediaItems = JSON.parse(localStorage.getItem('blue_moon_media_items')) || [];
         let currentCategory = 'all';
         let currentCoverBase64 = '';
@@ -508,12 +506,10 @@
         let formTags = { genre: [], author: [], director: [], creator: [] };
         let currentUser = null;
 
-        // Inicialização do Banner de Fundo
         if (bannerImageBase64) {
             document.documentElement.style.setProperty('--banner-bg', `url('${bannerImageBase64}')`);
         }
 
-        // Controle do Sistema de Autenticação Google
         const loginBtn = document.getElementById('loginBtn');
         const loginBtnText = document.getElementById('loginBtnText');
         const userInfo = document.getElementById('userInfo');
@@ -535,19 +531,17 @@
                         const provider = new firebase.auth.GoogleAuthProvider();
                         firebase.auth().signInWithPopup(provider).catch((error) => {
                             console.error("Erro no login:", error);
-                            alert("Não foi possível realizar o login com o Google. Verifique a configuração.");
+                            alert("Não foi possível realizar o login com o Google.");
                         });
                     };
                 }
             });
         } else {
-            // Fallback caso o Firebase não esteja configurado no arquivo para testes locais
             loginBtn.onclick = () => {
-                alert("O sistema está rodando localmente. Para ativar o login com Google, certifique-se de configurar as chaves do Firebase.");
+                alert("O sistema está rodando localmente.");
             };
         }
 
-        // Funções de UI Auxiliares e Modais
         window.openSidebar = () => {
             document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
             document.getElementById('sidebar-backdrop').classList.remove('hidden');
@@ -661,7 +655,6 @@
             const durationUnit = document.getElementById('form-duration-unit');
             const plannedOption = document.getElementById('option-planned');
 
-            // Reset visual visibility
             bookTypeWrapper.classList.add('hidden');
             fieldAuthor.classList.add('hidden');
             fieldDirector.classList.add('hidden');
@@ -713,7 +706,6 @@
             }
         };
 
-        // Tags Management
         window.addFormTag = (fieldKey, inputId) => {
             const input = document.getElementById(inputId);
             const val = input.value.trim();
@@ -755,7 +747,6 @@
             }
         };
 
-        // Swipe de Favorito Funcional
         let isSwiping = false, startX = 0, currentX = 0;
         window.startSwipeFav = (e) => {
             isSwiping = true;
@@ -779,7 +770,6 @@
             const track = document.getElementById('favorite-swipe-container');
             const thumb = document.getElementById('favorite-swipe-thumb');
             const maxDist = track.clientWidth - thumb.clientWidth - 8;
-            const isFavInput = document.getElementById('form-favorite');
             
             if (currentX > maxDist / 2) {
                 window.setFavoriteState(true);
@@ -807,7 +797,6 @@
             currentX = 0;
         };
 
-        // Salvar Obra
         window.saveMedia = (e) => {
             e.preventDefault();
             const editId = document.getElementById('form-edit-id').value;
@@ -856,7 +845,6 @@
             window.updateDashboardStats();
         };
 
-        // Navegação por Categorias do Menu Lateral
         window.switchCategory = (cat) => {
             currentCategory = cat;
             window.closeSidebar();
@@ -864,7 +852,6 @@
             window.closeFilterResults();
         };
 
-        // Renderizar Grid Principal
         window.renderMediaGrid = () => {
             const grid = document.getElementById('media-grid');
             const emptyState = document.getElementById('empty-state');
@@ -905,7 +892,7 @@
                         <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
                             <div>
                                 <h4 class="text-xs font-bold text-white line-clamp-1">${item.title}</h4>
-                                <p class="text-[10px] text-blue-200/70 capitalize">${item.category} ${item.sagaName ? '• ' + item.sagaName : ''}</p>
+                                <p class="text-[10px] text-blue-200/75 capitalize">${item.category} ${item.sagaName ? '• ' + item.sagaName : ''}</p>
                             </div>
                             <div class="flex items-center justify-between pt-1 border-t border-blue-900/30">
                                 <span class="text-[10px] font-semibold ${item.rating ? 'text-amber-400' : 'text-gray-500'}">${item.rating ? '🌕 ' + item.rating : 'Sem nota'}</span>
@@ -939,7 +926,6 @@
             }
         };
 
-        // Filtros por Cards de Estatística
         window.filterStoriesCard = (statusType) => {
             const container = document.getElementById('filter-results-container');
             const titleText = document.getElementById('filter-title-text');
@@ -993,7 +979,6 @@
             document.getElementById('filter-results-container').classList.add('hidden');
         };
 
-        // Atualizar Estatísticas dos Cards & Badges do Menu
         window.updateDashboardStats = () => {
             const total = mediaItems.length;
             const completed = mediaItems.filter(m => m.status === 'completed').length;
@@ -1009,7 +994,6 @@
             document.getElementById('stat-abandoned').innerText = abandoned;
             document.getElementById('stat-favorites').innerText = favorites;
 
-            // Badges do Drawer
             document.getElementById('badge-all').innerText = total;
             document.getElementById('badge-favorites').innerText = favorites;
             document.getElementById('badge-anime').innerText = mediaItems.filter(m => m.category === 'anime').length;
@@ -1020,7 +1004,6 @@
             document.getElementById('badge-series').innerText = mediaItems.filter(m => m.category === 'series').length;
         };
 
-        // Executar carregamento inicial
         window.renderMediaGrid();
         window.updateDashboardStats();
     </script>
