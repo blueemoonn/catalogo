@@ -319,14 +319,24 @@
                     <input type="text" id="form-original-title" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                 </div>
 
-                <!-- Bloco Específico para Livros -->
+                <!-- Bloco Específico para Livros (Modificado com as opções Físico, E-book e Audiobook) -->
                 <div id="field-book-type-wrapper" class="hidden space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Tipo de Publicação</label>
-                        <select id="form-book-type" onchange="window.toggleBookTypeFields()" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                            <option value="standalone">Volume Único</option>
-                            <option value="series">Série / Saga</option>
-                        </select>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-200 mb-1">Formato do Livro</label>
+                            <select id="form-book-format" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
+                                <option value="physical">Livro Físico</option>
+                                <option value="ebook">E-book</option>
+                                <option value="audiobook">Audiobook</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-200 mb-1">Tipo de Publicação</label>
+                            <select id="form-book-type" onchange="window.toggleBookTypeFields()" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
+                                <option value="standalone">Volume Único</option>
+                                <option value="series">Série / Saga</option>
+                            </select>
+                        </div>
                     </div>
                     <div id="field-book-series-details" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div class="sm:col-span-2">
@@ -442,772 +452,517 @@
                             </span>
                         </div>
                     </div>
+
                     <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
-                        <!-- Componente Swipe Funcional -->
-                        <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
-                            <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
-                            <div class="favorite-swipe-thumb">
+                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favoritar</label>
+                        <div id="favorite-swipe-container" class="favorite-swipe-track" onpointerdown="window.startSwipeFav(event)">
+                            <div id="favorite-swipe-thumb" class="favorite-swipe-thumb">
                                 <i class="fa-solid fa-heart text-xs"></i>
                             </div>
+                            <span id="favorite-swipe-text" class="favorite-swipe-text">Deslize para favoritar</span>
                         </div>
+                        <input type="hidden" id="form-favorite" value="false">
                     </div>
                 </div>
 
-                <!-- Resenha -->
-                <div>
-                    <label class="block text-xs font-semibold text-blue-200 mb-1">Resenha / Opinião</label>
-                    <textarea id="form-review" rows="3" placeholder="O que achou da obra?" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
-                </div>
-
-                <div class="pt-3 border-t border-blue-900/40 flex justify-end space-x-2">
-                    <button type="button" onclick="window.closeAddModal()" class="px-4 py-2 bg-blue-950/60 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer">Cancelar</button>
-                    <button type="submit" id="form-submit-btn" class="px-4 py-2 bg-[#2563eb] text-white text-xs font-semibold rounded-xl cursor-pointer">Salvar Obra</button>
+                <div class="flex justify-end space-x-2 pt-4 border-t border-blue-900/40">
+                    <button type="button" onclick="window.closeAddModal()" class="px-4 py-2 bg-blue-950/60 hover:bg-blue-950 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold rounded-xl shadow-lg cursor-pointer transition">Salvar Obra</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL DETALHES -->
-    <div id="modal-details" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-3 overflow-y-auto">
-        <div class="glass-card w-full max-w-lg rounded-2xl border border-blue-500/30 shadow-2xl modal-animate-in max-h-[90vh] flex flex-col overflow-hidden my-auto">
-            <div class="px-5 py-4 border-b border-blue-900/40 flex items-center justify-between bg-[#0e1738]/60">
-                <h3 class="text-base font-bold text-white">Detalhes da Obra</h3>
-                <button type="button" onclick="window.closeDetailsModal()" class="text-gray-300 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div id="details-content" class="p-5 overflow-y-auto space-y-4 flex-1"></div>
-        </div>
-    </div>
+    <!-- SCRIPT DA APLICAÇÃO -->
+    <script>
+        // Estado Global
+        let mediaItems = JSON.parse(localStorage.getItem('blue_moon_media_items')) || [];
+        let currentCategory = 'all';
+        let currentCoverBase64 = '';
+        let bannerImageBase64 = localStorage.getItem('blue_moon_banner') || '';
+        let formTags = { genre: [], author: [], director: [], creator: [] };
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyD_bk-Qu1vjejNGeGlprEs7isWacxpneTo",
-            authDomain: "blue-moon-jscr8785.firebaseapp.com",
-            projectId: "blue-moon-jscr8785",
-            storageBucket: "blue-moon-jscr8785.firebasestorage.app",
-            messagingSenderId: "116253867860",
-            appId: "1:116253867860:web:39cfe119f7cb8a7570d2c1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = initializeFirestore(app, {
-            localCache: persistentLocalCache()
-        });
-
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-        const loginBtn = document.getElementById('loginBtn');
-        const loginBtnText = document.getElementById('loginBtnText');
-        const userInfo = document.getElementById('userInfo');
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                if (loginBtnText) loginBtnText.textContent = 'Sair';
-                if(userInfo) {
-                    userInfo.style.display = 'inline';
-                    userInfo.textContent = `Olá, ${user.displayName ? user.displayName.split(' ')[0] : 'Utilizador'}`;
-                }
-            } else {
-                if (loginBtnText) loginBtnText.textContent = 'Entrar com Google';
-                if(userInfo) userInfo.style.display = 'none';
-            }
-        });
-
-        if (loginBtn) {
-            loginBtn.addEventListener('click', async () => {
-                if (auth.currentUser) {
-                    await signOut(auth);
-                } else {
-                    try {
-                        await signInWithPopup(auth, provider);
-                    } catch (error) {
-                        console.error("Erro no login:", error);
-                    }
-                }
-            });
+        // Inicialização do Banner de Fundo
+        if (bannerImageBase64) {
+            document.documentElement.style.setProperty('--banner-bg', `url('${bannerImageBase64}')`);
         }
 
-        let mediaItems = [];
-        let currentCategory = 'all';
-        let tempCoverBase64 = '';
-
-        // --- CONTROLO DO SWIPE DE FAVORITO NO FORMULÁRIO ---
-        let isSwiping = false;
-        let startSwipeX = 0;
-        let currentSwipeX = 0;
-
-        window.setFavoriteSwipeState = (isFav, triggerAnimation = true) => {
-            const track = document.getElementById('modal-favorite-swipe');
-            const label = document.getElementById('favorite-swipe-label');
-            const thumb = track ? track.querySelector('.favorite-swipe-thumb') : null;
-            if (!track || !thumb) return;
-
-            const trackWidth = track.clientWidth || 260;
-            const maxTranslate = trackWidth - 44; 
-
-            track.style.setProperty('--track-width', `${trackWidth}px`);
-
-            if (!triggerAnimation) {
-                thumb.style.transition = 'none';
-            } else {
-                thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease';
-            }
-
-            if (isFav) {
-                track.classList.add('active-fav');
-                track.setAttribute('data-is-favorite', 'true');
-                if (label) label.textContent = 'Favoritado!';
-                thumb.style.transform = `translateX(${maxTranslate}px)`;
-            } else {
-                track.classList.remove('active-fav');
-                track.setAttribute('data-is-favorite', 'false');
-                if (label) label.textContent = 'Deslize para Favoritar';
-                thumb.style.transform = `translateX(0px)`;
+        // Funções de UI Auxiliares e Modais
+        window.openSidebar = () => {
+            document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+        };
+        window.closeSidebar = () => {
+            document.getElementById('sidebar-drawer').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        };
+        window.openBannerModal = () => document.getElementById('modal-banner').classList.remove('hidden');
+        window.closeBannerModal = () => document.getElementById('modal-banner').classList.add('hidden');
+        
+        window.previewBannerFileName = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('banner-file-name').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (uploadEvent) => {
+                    window.tempBannerBase64 = uploadEvent.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         };
 
-        window.toggleFavoriteSwipe = () => {
-            const track = document.getElementById('modal-favorite-swipe');
-            if (!track) return;
-            const current = track.getAttribute('data-is-favorite') === 'true';
-            window.setFavoriteSwipeState(!current, true);
+        window.saveBannerImageFile = () => {
+            if (window.tempBannerBase64) {
+                bannerImageBase64 = window.tempBannerBase64;
+                localStorage.setItem('blue_moon_banner', bannerImageBase64);
+                document.documentElement.style.setProperty('--banner-bg', `url('${bannerImageBase64}')`);
+            }
+            window.closeBannerModal();
         };
 
-        // Eventos de arrastar para o Swipe
-        document.addEventListener('DOMContentLoaded', () => {
-            const track = document.getElementById('modal-favorite-swipe');
-            if (!track) return;
+        window.openAddModal = (editId = null) => {
+            document.getElementById('modal-add-edit').classList.remove('hidden');
+            window.resetForm();
+            if (editId) {
+                document.getElementById('modal-form-title.innerHTML').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Editar Obra';
+                const item = mediaItems.find(m => m.id === editId);
+                if (item) {
+                    document.getElementById('form-edit-id').value = item.id;
+                    document.getElementById('form-cover-url').value = item.coverUrl && !item.coverUrl.startsWith('data:') ? item.coverUrl : '';
+                    currentCoverBase64 = item.coverUrl && item.coverUrl.startsWith('data:') ? item.coverUrl : '';
+                    document.getElementById('form-category').value = item.category;
+                    document.getElementById('form-status').value = item.status;
+                    document.getElementById('form-title').value = item.title;
+                    document.getElementById('form-original-title').value = item.originalTitle || '';
+                    document.getElementById('form-synopsis').value = item.synopsis || '';
+                    document.getElementById('form-duration').value = item.duration || '';
+                    document.getElementById('form-release-date').value = item.releaseDate || '';
+                    document.getElementById('form-watch-date').value = item.watchDate || '';
+                    document.getElementById('form-rating').value = item.rating || '';
+                    window.updateFormRatingPreview(item.rating || '');
+                    
+                    if(item.category === 'book') {
+                        document.getElementById('form-book-format').value = item.bookFormat || 'physical';
+                        document.getElementById('form-book-type').value = item.bookType || 'standalone';
+                        document.getElementById('form-saga-name').value = item.sagaName || '';
+                        document.getElementById('form-saga-number').value = item.sagaNumber || '';
+                    }
 
-            const thumb = track.querySelector('.favorite-swipe-thumb');
-            if (!thumb) return;
+                    formTags.genre = item.genres || [];
+                    formTags.author = item.authors || [];
+                    formTags.director = item.directors || [];
+                    formTags.creator = item.creators || [];
+                    
+                    if(item.season) document.getElementById('form-season').value = item.season;
+                    if(item.episodes) document.getElementById('form-episodes').value = item.episodes;
+                    if(item.ovas) document.getElementById('form-ovas').value = item.ovas;
 
-            track.addEventListener('pointerdown', (e) => {
-                isSwiping = true;
-                startSwipeX = e.clientX;
-                thumb.style.transition = 'none';
-                track.setPointerCapture(e.pointerId);
-                e.preventDefault();
-            });
-
-            track.addEventListener('pointermove', (e) => {
-                if (!isSwiping) return;
-                const trackWidth = track.clientWidth || 260;
-                const maxTranslate = trackWidth - 44;
-                
-                const diffX = e.clientX - startSwipeX;
-                currentSwipeX = Math.max(0, Math.min(diffX, maxTranslate));
-
-                thumb.style.transform = `translateX(${currentSwipeX}px)`;
-                
-                if (currentSwipeX > maxTranslate / 2) {
-                    track.classList.add('active-fav');
-                } else {
-                    track.classList.remove('active-fav');
+                    window.setFavoriteState(item.favorite || false);
+                    window.toggleCategoryFields();
                 }
-            });
-
-            track.addEventListener('pointerup', (e) => {
-                if (!isSwiping) return;
-                isSwiping = false;
-
-                const trackWidth = track.clientWidth || 260;
-                const maxTranslate = trackWidth - 44;
-
-                if (Math.abs(e.clientX - startSwipeX) < 5) {
-                    window.toggleFavoriteSwipe();
-                } else {
-                    const shouldBeFav = currentSwipeX >= (maxTranslate / 2);
-                    window.setFavoriteSwipeState(shouldBeFav, true);
-                }
-
-                currentSwipeX = 0;
-                if (track.hasPointerCapture(e.pointerId)) {
-                    track.releasePointerCapture(e.pointerId);
-                }
-            });
-        });
-
-        const traduzirCategoria = (cat) => {
-            const map = {
-                'anime': 'Anime',
-                'short': 'Curta',
-                'dorama': 'Drama',
-                'movie': 'Filme',
-                'book': 'Livro',
-                'series': 'Série'
-            };
-            return map[cat?.toLowerCase()] || (cat ? cat.toUpperCase() : 'N/A');
-        };
-
-        const traduzirStatus = (st, cat) => {
-            const map = {
-                'completed': 'Concluído',
-                'in-progress': 'Em Andamento',
-                'planned': (cat === 'book' ? 'Quero Ler' : 'Quero Ver'),
-                'abandoned': 'Abandonado'
-            };
-            return map[st?.toLowerCase()] || st || 'N/A';
-        };
-
-        const formatarDataBR = (dataStr) => {
-            if (!dataStr) return '';
-            const partes = dataStr.split('-');
-            if (partes.length !== 3) return dataStr;
-            
-            const [ano, mes, dia] = partes;
-            const meses = [
-                'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-            ];
-            const nomeMes = meses[parseInt(mes, 10) - 1] || '';
-            return `${parseInt(dia, 10)} de ${nomeMes} de ${ano}`;
-        };
-
-        const formTags = {
-            genre: [],
-            author: [],
-            director: [],
-            creator: []
-        };
-
-        window.renderFormTags = (type) => {
-            const containerId = `${type}-tags-list`;
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = formTags[type].map((tag, idx) => `
-                <span class="inline-flex items-center space-x-1.5 bg-blue-900/60 border border-blue-700/50 text-blue-200 px-2.5 py-1 rounded-xl text-xs">
-                    <span>${tag}</span>
-                    <button type="button" onclick="window.removeFormTag('${type}', ${idx})" class="text-rose-400 hover:text-rose-300 cursor-pointer ml-1">
-                        <i class="fa-solid fa-xmark text-[11px]"></i>
-                    </button>
-                </span>
-            `).join('');
-        };
-
-        window.addFormTag = (type, inputId) => {
-            const input = document.getElementById(inputId);
-            const val = input.value.trim();
-            if (!val) return;
-            if (!formTags[type].includes(val)) {
-                formTags[type].push(val);
-                window.renderFormTags(type);
-            }
-            input.value = '';
-            input.focus();
-        };
-
-        window.removeFormTag = (type, idx) => {
-            formTags[type].splice(idx, 1);
-            window.renderFormTags(type);
-        };
-
-        const savedBanner = localStorage.getItem('blue_moon_banner_bg');
-        if (savedBanner) { document.documentElement.style.setProperty('--banner-bg', `url('${savedBanner}')`); }
-
-        onSnapshot(collection(db, 'media_obras'), (snapshot) => {
-            mediaItems = [];
-            snapshot.forEach((docSnap) => {
-                mediaItems.push({ id: docSnap.id, ...docSnap.data() });
-            });
-            window.updateStats();
-            window.renderMediaGrid();
-        }, (err) => {
-            console.warn("Modo offline ativo:", err);
-        });
-
-        window.updateFormRatingPreview = (val) => {
-            const starWrapper = document.getElementById('form-rating-star');
-            const starVal = document.getElementById('form-rating-val');
-            if (val !== '' && !isNaN(val)) {
-                starVal.innerText = val;
-                starWrapper.classList.remove('hidden');
             } else {
-                starWrapper.classList.add('hidden');
+                document.getElementById('modal-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Cadastrar Obra';
+                window.toggleCategoryFields();
             }
+            window.renderFormTagsAll();
         };
 
-        const renderTagsFromArray = (arr) => {
-            if (!arr || !arr.length) return '';
-            return arr.map(i => `<span class="inline-block bg-blue-900/60 border border-blue-700/50 text-blue-200 px-2 py-0.5 rounded-md text-[11px] mr-1 mb-1">${i}</span>`).join('');
+        window.closeAddModal = () => document.getElementById('modal-add-edit').classList.add('hidden');
+
+        window.resetForm = () => {
+            document.getElementById('media-form').reset();
+            document.getElementById('form-edit-id').value = '';
+            currentCoverBase64 = '';
+            document.getElementById('cover-file-label').innerText = 'Carregar foto do PC/Telemóvel...';
+            formTags = { genre: [], author: [], director: [], creator: [] };
+            window.setFavoriteState(false);
+            window.updateFormRatingPreview('');
         };
 
-        window.toggleBookTypeFields = () => {
-            const bookType = document.getElementById('form-book-type').value;
-            const detailsBlock = document.getElementById('field-book-series-details');
-            if (bookType === 'series') {
-                detailsBlock.classList.remove('hidden');
-            } else {
-                detailsBlock.classList.add('hidden');
+        window.handleCoverFile = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('cover-file-label').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (ev) => { currentCoverBase64 = ev.target.result; };
+                reader.readAsDataURL(file);
             }
         };
 
         window.toggleCategoryFields = () => {
             const cat = document.getElementById('form-category').value;
-            const authorBlock = document.getElementById('field-author');
-            const directorBlock = document.getElementById('field-director');
-            const creatorBlock = document.getElementById('field-creator');
-            const seasonsEpsBlock = document.getElementById('field-seasons-eps');
-            const ovasWrapper = document.getElementById('field-ovas-wrapper');
+            const bookTypeWrapper = document.getElementById('field-book-type-wrapper');
+            const fieldAuthor = document.getElementById('field-author');
+            const fieldDirector = document.getElementById('field-director');
+            const fieldCreator = document.getElementById('field-creator');
+            const fieldSeasonsEps = document.getElementById('field-seasons-eps');
+            const fieldOvasWrapper = document.getElementById('field-ovas-wrapper');
             const durationLabel = document.getElementById('form-duration-label');
             const durationUnit = document.getElementById('form-duration-unit');
-            const durationInput = document.getElementById('form-duration');
-            const bookTypeWrapper = document.getElementById('field-book-type-wrapper');
-            const optionPlanned = document.getElementById('option-planned');
+            const plannedOption = document.getElementById('option-planned');
 
-            if (optionPlanned) {
-                optionPlanned.innerText = (cat === 'book' ? 'Quero Ler' : 'Quero Ver');
-            }
-
-            authorBlock.classList.add('hidden');
-            directorBlock.classList.add('hidden');
-            creatorBlock.classList.add('hidden');
-            seasonsEpsBlock.classList.add('hidden');
-            ovasWrapper.classList.add('hidden');
+            // Reset visual visibility
             bookTypeWrapper.classList.add('hidden');
+            fieldAuthor.classList.add('hidden');
+            fieldDirector.classList.add('hidden');
+            fieldCreator.classList.add('hidden');
+            fieldSeasonsEps.classList.add('hidden');
+            fieldOvasWrapper.classList.add('hidden');
 
-            if (cat === 'book') {
-                authorBlock.classList.remove('hidden');
-                bookTypeWrapper.classList.remove('hidden');
-                durationLabel.innerText = 'Páginas';
-                durationUnit.innerText = 'pág';
-                durationInput.placeholder = 'Ex: 350';
-                window.toggleBookTypeFields();
-            } else {
-                durationLabel.innerText = 'Duração';
+            if (cat === 'anime') {
+                fieldAuthor.classList.remove('hidden');
+                fieldDirector.classList.remove('hidden');
+                fieldSeasonsEps.classList.remove('hidden');
+                fieldOvasWrapper.classList.remove('hidden');
+                durationLabel.innerText = 'Duração Média por Episódio';
                 durationUnit.innerText = 'min';
-                durationInput.placeholder = 'Ex: 120';
+                plannedOption.innerText = 'Quero Ver';
+            } else if (cat === 'short') {
+                fieldDirector.classList.remove('hidden');
+                durationLabel.innerText = 'Duração Total';
+                durationUnit.innerText = 'min';
+                plannedOption.innerText = 'Quero Ver';
+            } else if (cat === 'dorama' || cat === 'series') {
+                fieldCreator.classList.remove('hidden');
+                fieldSeasonsEps.classList.remove('hidden');
+                durationLabel.innerText = 'Duração Média por Episódio';
+                durationUnit.innerText = 'min';
+                plannedOption.innerText = 'Quero Ver';
+            } else if (cat === 'movie') {
+                fieldDirector.classList.remove('hidden');
+                durationLabel.innerText = 'Duração do Filme';
+                durationUnit.innerText = 'min';
+                plannedOption.innerText = 'Quero Ver';
+            } else if (cat === 'book') {
+                bookTypeWrapper.classList.remove('hidden');
+                fieldAuthor.classList.remove('hidden');
+                durationLabel.innerText = 'Número de Páginas';
+                durationUnit.innerText = 'págs';
+                plannedOption.innerText = 'Quero Ler';
+                window.toggleBookTypeFields();
             }
+        };
 
-            if (cat === 'short' || cat === 'movie') {
-                directorBlock.classList.remove('hidden');
-            } else if (cat === 'series') {
-                directorBlock.classList.remove('hidden');
-                seasonsEpsBlock.classList.remove('hidden');
-            } else if (cat === 'dorama') {
-                seasonsEpsBlock.classList.remove('hidden');
-            } else if (cat === 'anime') {
-                creatorBlock.classList.remove('hidden');
-                seasonsEpsBlock.classList.remove('hidden');
-                ovasWrapper.classList.remove('hidden');
+        window.toggleBookTypeFields = () => {
+            const type = document.getElementById('form-book-type').value;
+            const details = document.getElementById('field-book-series-details');
+            if (type === 'series') {
+                details.classList.remove('hidden');
+            } else {
+                details.classList.add('hidden');
             }
         };
 
-        window.handleCoverFile = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            document.getElementById('cover-file-label').innerText = 'A processar e a compactar imagem...';
+        // Tags Management
+        window.addFormTag = (fieldKey, inputId) => {
+            const input = document.getElementById(inputId);
+            const val = input.value.trim();
+            if (val && !formTags[fieldKey].includes(val)) {
+                formTags[fieldKey].push(val);
+                input.value = '';
+                window.renderFormTags(fieldKey);
+            }
+        };
+
+        window.removeFormTag = (fieldKey, val) => {
+            formTags[fieldKey] = formTags[fieldKey].filter(item => item !== val);
+            window.renderFormTags(fieldKey);
+        };
+
+        window.renderFormTags = (fieldKey) => {
+            const listEl = document.getElementById(`${fieldKey}-tags-list`);
+            if (!listEl) return;
+            listEl.innerHTML = formTags[fieldKey].map(tag => `
+                <span class="bg-blue-600/20 border border-blue-500/30 text-blue-200 text-xs px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
+                    <span>${tag}</span>
+                    <button type="button" onclick="window.removeFormTag('${fieldKey}', '${tag}')" class="text-blue-300 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                </span>
+            `).join('');
+        };
+
+        window.renderFormTagsAll = () => {
+            ['genre', 'author', 'director', 'creator'].forEach(k => window.renderFormTags(k));
+        };
+
+        window.updateFormRatingPreview = (val) => {
+            const starEl = document.getElementById('form-rating-star');
+            const valEl = document.getElementById('form-rating-val');
+            if (val) {
+                starEl.classList.remove('hidden');
+                valEl.innerText = val;
+            } else {
+                starEl.classList.add('hidden');
+            }
+        };
+
+        // Swipe de Favorito Funcional
+        let isSwiping = false, startX = 0, currentX = 0;
+        window.startSwipeFav = (e) => {
+            isSwiping = true;
+            startX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const track = document.getElementById('favorite-swipe-container');
+            track.addEventListener('pointermove', window.onSwipeMove);
+            track.addEventListener('pointerup', window.endSwipeFav);
+        };
+        window.onSwipeMove = (e) => {
+            if (!isSwiping) return;
+            currentX = (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - startX;
+            const track = document.getElementById('favorite-swipe-container');
+            const thumb = document.getElementById('favorite-swipe-thumb');
+            const maxDist = track.clientWidth - thumb.clientWidth - 8;
+            let move = Math.max(0, Math.min(currentX, maxDist));
+            thumb.style.transform = `translateX(${move}px)`;
+        };
+        window.endSwipeFav = () => {
+            if (!isSwiping) return;
+            isSwiping = false;
+            const track = document.getElementById('favorite-swipe-container');
+            const thumb = document.getElementById('favorite-swipe-thumb');
+            const maxDist = track.clientWidth - thumb.clientWidth - 8;
+            const isFavInput = document.getElementById('form-favorite');
             
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 500;
-                    const MAX_HEIGHT = 750;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    tempCoverBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    document.getElementById('cover-file-label').innerText = 'Capa redimensionada e pronta! ✓';
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+            if (currentX > maxDist / 2) {
+                window.setFavoriteState(true);
+            } else {
+                window.setFavoriteState(false);
+            }
+            track.removeEventListener('pointermove', window.onSwipeMove);
+            track.removeEventListener('pointerup', window.endSwipeFav);
         };
 
-        window.openBannerModal = () => document.getElementById('modal-banner').classList.remove('hidden');
-        window.closeBannerModal = () => document.getElementById('modal-banner').classList.add('hidden');
-        window.previewBannerFileName = (e) => {
-            const file = e.target.files[0];
-            if (file) document.getElementById('banner-file-name').innerText = file.name;
-        };
-        window.saveBannerImageFile = () => {
-            const file = document.getElementById('form-banner-file').files[0];
-            if (!file) return window.closeBannerModal();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.documentElement.style.setProperty('--banner-bg', `url('${e.target.result}')`);
-                localStorage.setItem('blue_moon_banner_bg', e.target.result);
-                window.closeBannerModal();
-            };
-            reader.readAsDataURL(file);
-        };
-
-        window.openSidebar = () => { document.getElementById('sidebar-drawer').classList.remove('-translate-x-full'); document.getElementById('sidebar-backdrop').classList.remove('hidden'); };
-        window.closeSidebar = () => { document.getElementById('sidebar-drawer').classList.add('-translate-x-full'); document.getElementById('sidebar-backdrop').classList.add('hidden'); };
-
-        window.openAddModal = () => {
-            tempCoverBase64 = '';
-            document.getElementById('form-edit-id').value = '';
-            document.getElementById('modal-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Cadastrar Obra';
-            document.getElementById('form-submit-btn').innerText = 'Salvar Obra';
-            document.getElementById('media-form').reset();
-            document.getElementById('cover-file-label').innerText = 'Carregar foto do PC/Telemóvel...';
-            
-            formTags.genre = []; formTags.author = []; formTags.director = []; formTags.creator = [];
-            ['genre', 'author', 'director', 'creator'].forEach(t => window.renderFormTags(t));
-            
-            document.getElementById('modal-add-edit').classList.remove('hidden');
-            window.toggleCategoryFields();
-            window.setFavoriteSwipeState(false);
+        window.setFavoriteState = (isFav) => {
+            const track = document.getElementById('favorite-swipe-container');
+            const thumb = document.getElementById('favorite-swipe-thumb');
+            const input = document.getElementById('form-favorite');
+            input.value = isFav;
+            if (isFav) {
+                track.classList.add('active-fav');
+                thumb.style.transform = `translateX(${track.clientWidth - thumb.clientWidth - 8}px)`;
+                thumb.style.background = '#ef4444';
+            } else {
+                track.classList.remove('active-fav');
+                thumb.style.transform = 'translateX(0px)';
+                thumb.style.background = '#2563eb';
+            }
+            currentX = 0;
         };
 
-        window.openEditModal = (id) => {
-            const item = mediaItems.find(i => i.id === id);
-            if (!item) return;
-
-            window.closeDetailsModal();
-            tempCoverBase64 = '';
-            document.getElementById('form-edit-id').value = item.id;
-            document.getElementById('modal-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Editar Obra';
-            document.getElementById('form-submit-btn').innerText = 'Atualizar Obra';
-
-            document.getElementById('form-cover-url').value = item.cover?.startsWith('data:') ? '' : (item.cover || '');
-            document.getElementById('cover-file-label').innerText = item.cover?.startsWith('data:') ? 'Imagem carregada anteriormente' : 'Carregar foto do PC/Telemóvel...';
-            document.getElementById('form-category').value = item.category || 'anime';
-            window.toggleCategoryFields();
-
-            document.getElementById('form-book-type').value = item.bookType || 'standalone';
-            window.toggleBookTypeFields();
-            document.getElementById('form-saga-name').value = item.sagaName || '';
-            document.getElementById('form-saga-number').value = item.sagaNumber || '';
-
-            document.getElementById('form-status').value = item.status || 'completed';
-            document.getElementById('form-title').value = item.title || '';
-            document.getElementById('form-original-title').value = item.originalTitle || '';
-            document.getElementById('form-synopsis').value = item.synopsis || '';
-            document.getElementById('form-duration').value = item.duration || '';
-            document.getElementById('form-release-date').value = item.releaseDate || '';
-            document.getElementById('form-watch-date').value = item.watchDate || '';
-            document.getElementById('form-season').value = item.season || '1';
-            document.getElementById('form-episodes').value = item.episodes || '0';
-            document.getElementById('form-ovas').value = item.ovas || '0';
-            document.getElementById('form-rating').value = item.rating || '';
-            window.updateFormRatingPreview(item.rating || '');
-            document.getElementById('form-review').value = item.review || '';
-
-            window.setFavoriteSwipeState(!!item.favorite);
-
-            formTags.genre = Array.isArray(item.genres) ? [...item.genres] : (item.genre ? [item.genre] : []);
-            formTags.author = Array.isArray(item.authors) ? [...item.authors] : (item.author ? [item.author] : []);
-            formTags.director = Array.isArray(item.directors) ? [...item.directors] : (item.director ? [item.director] : []);
-            formTags.creator = Array.isArray(item.creators) ? [...item.creators] : (item.creator ? [item.creator] : []);
-            ['genre', 'author', 'director', 'creator'].forEach(t => window.renderFormTags(t));
-
-            document.getElementById('modal-add-edit').classList.remove('hidden');
-        };
-
-        window.closeAddModal = () => {
-            document.getElementById('modal-add-edit').classList.add('hidden');
-            window.updateFormRatingPreview('');
-        };
-
-        window.switchCategory = (cat) => {
-            currentCategory = cat;
-            window.closeSidebar();
-            window.closeFilterResults();
-            window.updateStats();
-            window.renderMediaGrid();
-        };
-
-        window.saveMedia = async (e) => {
+        // Salvar Obra
+        window.saveMedia = (e) => {
             e.preventDefault();
             const editId = document.getElementById('form-edit-id').value;
-            const cat = document.getElementById('form-category').value;
-            const coverUrl = document.getElementById('form-cover-url').value.trim();
-            const existingItem = editId ? mediaItems.find(i => i.id === editId) : null;
-            const finalCover = tempCoverBase64 || coverUrl || (existingItem ? existingItem.cover : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600');
-
-            const swipeTrack = document.getElementById('modal-favorite-swipe');
-            const isFavoriteVal = swipeTrack ? swipeTrack.getAttribute('data-is-favorite') === 'true' : false;
+            const coverUrlInput = document.getElementById('form-cover-url').value.trim();
+            const category = document.getElementById('form-category').value;
 
             const itemData = {
-                cover: finalCover,
-                category: cat,
+                id: editId ? editId : 'media_' + Date.now(),
+                category: category,
+                coverUrl: currentCoverBase64 || coverUrlInput || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600&auto=format&fit=crop',
                 status: document.getElementById('form-status').value,
                 title: document.getElementById('form-title').value,
                 originalTitle: document.getElementById('form-original-title').value,
-                bookType: cat === 'book' ? document.getElementById('form-book-type').value : '',
-                sagaName: (cat === 'book' && document.getElementById('form-book-type').value === 'series') ? document.getElementById('form-saga-name').value : '',
-                sagaNumber: (cat === 'book' && document.getElementById('form-book-type').value === 'series') ? document.getElementById('form-saga-number').value : '',
-                genres: [...formTags.genre],
-                releaseDate: document.getElementById('form-release-date').value,
-                authors: cat === 'book' ? [...formTags.author] : [],
-                directors: (cat === 'short' || cat === 'movie' || cat === 'series') ? [...formTags.director] : [],
-                creators: cat === 'anime' ? [...formTags.creator] : [],
-                season: ['anime', 'series', 'dorama'].includes(cat) ? document.getElementById('form-season').value : '',
-                episodes: ['anime', 'series', 'dorama'].includes(cat) ? document.getElementById('form-episodes').value : '',
-                ovas: cat === 'anime' ? document.getElementById('form-ovas').value : '',
-                duration: document.getElementById('form-duration').value,
                 synopsis: document.getElementById('form-synopsis').value,
+                duration: document.getElementById('form-duration').value,
+                releaseDate: document.getElementById('form-release-date').value,
                 watchDate: document.getElementById('form-watch-date').value,
                 rating: document.getElementById('form-rating').value,
-                favorite: isFavoriteVal,
-                review: document.getElementById('form-review').value
+                favorite: document.getElementById('form-favorite').value === 'true',
+                genres: [...formTags.genre],
+                authors: [...formTags.author],
+                directors: [...formTags.director],
+                creators: [...formTags.creator],
+                season: document.getElementById('form-season').value,
+                episodes: document.getElementById('form-episodes').value,
+                ovas: document.getElementById('form-ovas').value
             };
 
-            try {
-                if (editId) {
-                    await updateDoc(doc(db, 'media_obras', editId), itemData);
-                } else {
-                    itemData.createdAt = Date.now();
-                    await addDoc(collection(db, 'media_obras'), itemData);
-                }
-                document.getElementById('media-form').reset();
-                window.updateFormRatingPreview('');
-                
-                formTags.genre = []; formTags.author = []; formTags.director = []; formTags.creator = [];
-                ['genre', 'author', 'director', 'creator'].forEach(t => window.renderFormTags(t));
-                
-                tempCoverBase64 = '';
-                window.closeAddModal();
-            } catch (err) {
-                console.error("Erro ao salvar:", err);
-            }
-        };
-
-        window.updateStats = () => {
-            let list = mediaItems;
-            if (currentCategory === 'favorites') list = mediaItems.filter(i => i.favorite);
-            else if (currentCategory !== 'all') list = mediaItems.filter(i => i.category === currentCategory);
-
-            const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
-            setVal('stat-acervo', list.length);
-            setVal('stat-completed', list.filter(i => i.status === 'completed').length);
-            setVal('stat-in-progress', list.filter(i => i.status === 'in-progress').length);
-            setVal('stat-planned', list.filter(i => i.status === 'planned').length);
-            setVal('stat-abandoned', list.filter(i => i.status === 'abandoned').length);
-            setVal('stat-favorites', list.filter(i => i.favorite).length);
-
-            const plannedLabelEl = document.getElementById('stat-planned-label');
-            if (plannedLabelEl) {
-                if (currentCategory === 'book') {
-                    plannedLabelEl.innerText = 'QUERO LER';
-                } else if (currentCategory === 'all' || currentCategory === 'favorites') {
-                    plannedLabelEl.innerText = 'QUERO VER/LER';
-                } else {
-                    plannedLabelEl.innerText = 'QUERO VER';
-                }
+            if (category === 'book') {
+                itemData.bookFormat = document.getElementById('form-book-format').value;
+                itemData.bookType = document.getElementById('form-book-type').value;
+                itemData.sagaName = document.getElementById('form-saga-name').value;
+                itemData.sagaNumber = document.getElementById('form-saga-number').value;
             }
 
-            ['all','favorites','anime','short','dorama','movie','book','series'].forEach(c => {
-                const count = c === 'all' ? mediaItems.length : (c === 'favorites' ? mediaItems.filter(i => i.favorite).length : mediaItems.filter(i => i.category === c).length);
-                const badge = document.getElementById(`badge-${c}`);
-                if (badge) badge.innerText = count;
-            });
+            if (editId) {
+                const idx = mediaItems.findIndex(m => m.id === editId);
+                if (idx !== -1) mediaItems[idx] = itemData;
+            } else {
+                mediaItems.unshift(itemData);
+            }
+
+            localStorage.setItem('blue_moon_media_items', JSON.stringify(mediaItems));
+            window.closeAddModal();
+            window.renderMediaGrid();
+            window.updateDashboardStats();
         };
 
+        // Navegação por Categorias do Menu Lateral
+        window.switchCategory = (cat) => {
+            currentCategory = cat;
+            window.closeSidebar();
+            window.renderMediaGrid();
+            window.closeFilterResults();
+        };
+
+        // Renderizar Grid Principal
         window.renderMediaGrid = () => {
             const grid = document.getElementById('media-grid');
-            const searchInput = document.getElementById('search-input');
             const emptyState = document.getElementById('empty-state');
-            if (!grid) return;
-            grid.innerHTML = '';
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
 
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
-            let list = mediaItems.filter(i => {
-                if (currentCategory === 'favorites') return i.favorite;
-                if (currentCategory !== 'all') return i.category === currentCategory;
-                return true;
-            }).filter(i => i.title?.toLowerCase().includes(search));
+            let filtered = mediaItems.filter(item => {
+                const matchesCat = currentCategory === 'all' ? true : (currentCategory === 'favorites' ? item.favorite : item.category === currentCategory);
+                const matchesSearch = item.title.toLowerCase().includes(searchVal) || (item.originalTitle && item.originalTitle.toLowerCase().includes(searchVal));
+                return matchesCat && matchesSearch;
+            });
 
-            list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
 
-            if (emptyState) emptyState.classList.toggle('hidden', list.length > 0);
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(item => {
+                let badgeFormatHtml = '';
+                if(item.category === 'book' && item.bookFormat) {
+                    let formatLabel = 'Físico';
+                    let formatIcon = 'fa-book';
+                    if(item.bookFormat === 'ebook') { formatLabel = 'E-book'; formatIcon = 'fa-tablet-screen-button'; }
+                    else if(item.bookFormat === 'audiobook') { formatLabel = 'Audiobook'; formatIcon = 'fa-headphones'; }
+                    badgeFormatHtml = `<span class="absolute top-2 left-2 bg-blue-900/80 backdrop-blur-md text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 shadow"><i class="fa-solid ${formatIcon}"></i><span>${formatLabel}</span></span>`;
+                }
 
-            list.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'glass-card rounded-xl overflow-hidden shadow-lg border border-blue-500/25 flex flex-col cursor-pointer hover:border-blue-400/65 transition';
-                card.onclick = () => window.openDetailsModal(item.id);
-                card.innerHTML = `
-                    <div class="relative aspect-[2/3] bg-blue-950/40">
-                        <img class="w-full h-full object-cover" src="${item.cover}" alt="${item.title}">
-                        ${item.favorite ? '<span class="absolute top-2 right-2 text-rose-400 text-sm drop-shadow-md">❤️</span>' : ''}
-                    </div>
-                    <div class="p-3 flex-1 flex flex-col justify-between">
-                        <h4 class="font-bold text-sm text-white truncate">${item.title}</h4>
-                        ${item.rating ? `<span class="text-[11px] text-blue-300 font-semibold mt-1 flex items-center space-x-1"><span>🌕</span><span>${item.rating} / 10</span></span>` : ''}
+                return `
+                    <div class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-xl relative group transition hover:border-blue-400">
+                        <div class="aspect-[3/4] relative overflow-hidden bg-blue-950/40">
+                            <img src="${item.coverUrl}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            ${badgeFormatHtml}
+                            <button onclick="window.toggleFavoriteItem('${item.id}')" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-xs ${item.favorite ? 'text-rose-500' : 'text-gray-300'} cursor-pointer transition hover:scale-110">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
+                            <div>
+                                <h4 class="text-xs font-bold text-white line-clamp-1">${item.title}</h4>
+                                <p class="text-[10px] text-blue-200/70 capitalize">${item.category} ${item.sagaName ? '• ' + item.sagaName : ''}</p>
+                            </div>
+                            <div class="flex items-center justify-between pt-1 border-t border-blue-900/30">
+                                <span class="text-[10px] font-semibold ${item.rating ? 'text-amber-400' : 'text-gray-500'}">${item.rating ? '🌕 ' + item.rating : 'Sem nota'}</span>
+                                <div class="flex items-center space-x-1.5">
+                                    <button onclick="window.openAddModal('${item.id}')" class="p-1.5 text-blue-300 hover:text-white bg-blue-950/50 rounded-lg cursor-pointer"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                    <button onclick="window.deleteItem('${item.id}')" class="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-950/40 rounded-lg cursor-pointer"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
-                grid.appendChild(card);
-            });
+            }).join('');
         };
 
-        // --- FUNÇÕES DE FILTRAGEM DOS CARDS DE ESTATÍSTICA ---
-        window.filterStoriesCard = (filterType) => {
+        window.toggleFavoriteItem = (id) => {
+            const item = mediaItems.find(m => m.id === id);
+            if (item) {
+                item.favorite = !item.favorite;
+                localStorage.setItem('blue_moon_media_items', JSON.stringify(mediaItems));
+                window.renderMediaGrid();
+                window.updateDashboardStats();
+            }
+        };
+
+        window.deleteItem = (id) => {
+            if (confirm('Deseja realmente excluir esta obra do acervo?')) {
+                mediaItems = mediaItems.filter(m => m.id !== id);
+                localStorage.setItem('blue_moon_media_items', JSON.stringify(mediaItems));
+                window.renderMediaGrid();
+                window.updateDashboardStats();
+            }
+        };
+
+        // Filtros por Cards de Estatística
+        window.filterStoriesCard = (statusType) => {
             const container = document.getElementById('filter-results-container');
             const titleText = document.getElementById('filter-title-text');
             const grid = document.getElementById('filter-results-grid');
-            if (!container || !grid) return;
-
-            // Pega os itens da categoria atual (seja "all", "anime", etc.)
-            let baseList = mediaItems;
-            if (currentCategory === 'favorites') {
-                baseList = mediaItems.filter(i => i.favorite);
-            } else if (currentCategory !== 'all') {
-                baseList = mediaItems.filter(i => i.category === currentCategory);
-            }
 
             let filtered = [];
-            let labelName = '';
+            let title = '';
 
-            switch (filterType) {
-                case 'all':
-                    filtered = baseList;
-                    labelName = 'Total de Itens';
-                    break;
-                case 'completed':
-                    filtered = baseList.filter(i => i.status === 'completed');
-                    labelName = 'Itens Concluídos';
-                    break;
-                case 'in-progress':
-                    filtered = baseList.filter(i => i.status === 'in-progress');
-                    labelName = 'Itens Em Andamento';
-                    break;
-                case 'planned':
-                    filtered = baseList.filter(i => i.status === 'planned');
-                    labelName = currentCategory === 'book' ? 'Quero Ler' : 'Quero Ver';
-                    break;
-                case 'abandoned':
-                    filtered = baseList.filter(i => i.status === 'abandoned');
-                    labelName = 'Itens Abandonados';
-                    break;
-                case 'favorites':
-                    filtered = baseList.filter(i => i.favorite);
-                    labelName = 'Itens Favoritos';
-                    break;
+            if (statusType === 'all') {
+                filtered = mediaItems;
+                title = 'Total do Acervo';
+            } else if (statusType === 'completed') {
+                filtered = mediaItems.filter(m => m.status === 'completed');
+                title = 'Obras Concluídas';
+            } else if (statusType === 'in-progress') {
+                filtered = mediaItems.filter(m => m.status === 'in-progress');
+                title = 'Obras Em Andamento';
+            } else if (statusType === 'planned') {
+                filtered = mediaItems.filter(m => m.status === 'planned');
+                title = 'Quero Ver / Ler';
+            } else if (statusType === 'abandoned') {
+                filtered = mediaItems.filter(m => m.status === 'abandoned');
+                title = 'Obras Abandonadas';
+            } else if (statusType === 'favorites') {
+                filtered = mediaItems.filter(m => m.favorite);
+                title = 'Obras Favoritas';
             }
 
-            titleText.innerText = `${labelName} (${filtered.length})`;
-            grid.innerHTML = '';
+            titleText.innerText = title;
+            container.classList.remove('hidden');
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-blue-300/70">Nenhuma obra encontrada nesta categoria.</div>`;
-            } else {
-                filtered.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'glass-card rounded-xl overflow-hidden shadow-lg border border-blue-500/25 flex flex-col cursor-pointer hover:border-blue-400/65 transition';
-                    card.onclick = () => window.openDetailsModal(item.id);
-                    card.innerHTML = `
-                        <div class="relative aspect-[2/3] bg-blue-950/40">
-                            <img class="w-full h-full object-cover" src="${item.cover}" alt="${item.title}">
-                            ${item.favorite ? '<span class="absolute top-2 right-2 text-rose-400 text-sm drop-shadow-md">❤️</span>' : ''}
-                        </div>
-                        <div class="p-3 flex-1 flex flex-col justify-between">
-                            <h4 class="font-bold text-sm text-white truncate">${item.title}</h4>
-                            ${item.rating ? `<span class="text-[11px] text-blue-300 font-semibold mt-1 flex items-center space-x-1"><span>🌕</span><span>${item.rating} / 10</span></span>` : ''}
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
+                grid.innerHTML = `<p class="col-span-full text-center text-xs text-gray-400 py-6">Nenhum registro encontrado nesta categoria.</p>`;
+                return;
             }
 
-            container.classList.remove('hidden');
-            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            grid.innerHTML = filtered.map(item => `
+                <div class="glass-card rounded-xl overflow-hidden flex flex-col shadow-lg">
+                    <div class="aspect-[3/4] relative bg-blue-950/40">
+                        <img src="${item.coverUrl}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-2.5">
+                        <h5 class="text-xs font-bold text-white line-clamp-1">${item.title}</h5>
+                        <p class="text-[10px] text-blue-200/70 capitalize">${item.category}</p>
+                    </div>
+                </div>
+            `).join('');
         };
 
         window.closeFilterResults = () => {
-            const container = document.getElementById('filter-results-container');
-            if (container) container.classList.add('hidden');
+            document.getElementById('filter-results-container').classList.add('hidden');
         };
 
-        window.openDetailsModal = (id) => {
-            const item = mediaItems.find(i => i.id === id);
-            if (!item) return;
+        // Atualizar Estatísticas dos Cards & Badges do Menu
+        window.updateDashboardStats = () => {
+            const total = mediaItems.length;
+            const completed = mediaItems.filter(m => m.status === 'completed').length;
+            const inProgress = mediaItems.filter(m => m.status === 'in-progress').length;
+            const planned = mediaItems.filter(m => m.status === 'planned').length;
+            const abandoned = mediaItems.filter(m => m.status === 'abandoned').length;
+            const favorites = mediaItems.filter(m => m.favorite).length;
 
-            const genresList = item.genres || (item.genre ? [item.genre] : []);
-            const authorsList = item.authors || (item.author ? [item.author] : []);
-            const directorsList = item.directors || (item.director ? [item.director] : []);
-            const creatorsList = item.creators || (item.creator ? [item.creator] : []);
+            document.getElementById('stat-acervo').innerText = total;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-in-progress').innerText = inProgress;
+            document.getElementById('stat-planned').innerText = planned;
+            document.getElementById('stat-abandoned').innerText = abandoned;
+            document.getElementById('stat-favorites').innerText = favorites;
 
-            let extraInfo = '';
-            if (item.originalTitle) extraInfo += `<p><strong>Título Original:</strong> ${item.originalTitle}</p>`;
-            if (item.category === 'book') {
-                if (item.bookType === 'series') {
-                    extraInfo += `<p><strong>Tipo:</strong> Série / Saga</p>`;
-                    if (item.sagaName) extraInfo += `<p><strong>Saga:</strong> ${item.sagaName}</p>`;
-                    if (item.sagaNumber) extraInfo += `<p><strong>Volume:</strong> ${item.sagaNumber}</p>`;
-                } else {
-                    extraInfo += `<p><strong>Tipo:</strong> Volume Único</p>`;
-                }
-            }
-            if (item.status) extraInfo += `<p><strong>Status:</strong> ${traduzirStatus(item.status, item.category)}</p>`;
-            if (genresList.length) extraInfo += `<div class="mt-1"><strong>Gênero(s):</strong><div class="mt-0.5">${renderTagsFromArray(genresList)}</div></div>`;
-            if (authorsList.length) extraInfo += `<div class="mt-1"><strong>Autor(es):</strong><div class="mt-0.5">${renderTagsFromArray(authorsList)}</div></div>`;
-            if (directorsList.length) extraInfo += `<div class="mt-1"><strong>Diretor(es):</strong><div class="mt-0.5">${renderTagsFromArray(directorsList)}</div></div>`;
-            if (creatorsList.length) extraInfo += `<div class="mt-1"><strong>Criador(es):</strong><div class="mt-0.5">${renderTagsFromArray(creatorsList)}</div></div>`;
-            if (item.season) extraInfo += `<p><strong>Temporada:</strong> ${item.season}</p>`;
-            if (item.episodes) extraInfo += `<p><strong>Episódios:</strong> ${item.episodes}</p>`;
-            if (item.ovas) extraInfo += `<p><strong>OVAs:</strong> ${item.ovas}</p>`;
-            
-            if (item.duration) {
-                const labelDuração = item.category === 'book' ? 'Páginas' : 'Duração';
-                const unidade = item.category === 'book' ? 'págs' : 'min';
-                extraInfo += `<p><strong>${labelDuração}:</strong> ${item.duration} ${unidade}</p>`;
-            }
-
-            if (item.releaseDate) extraInfo += `<p><strong>Data de Lançamento:</strong> ${formatarDataBR(item.releaseDate)}</p>`;
-            if (item.watchDate) extraInfo += `<p><strong>Visto em:</strong> ${formatarDataBR(item.watchDate)}</p>`;
-
-            document.getElementById('details-content').innerHTML = `
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <img src="${item.cover}" class="w-28 h-40 object-cover rounded-xl border border-blue-500/30 mx-auto sm:mx-0">
-                    <div class="space-y-1.5 flex-1 text-xs">
-                        <h4 class="text-base font-extrabold text-white">${item.title} ${item.favorite ? '❤️' : ''}</h4>
-                        <p class="text-blue-300 uppercase font-semibold flex items-center space-x-1.5">
-                            <span>Categoria: ${traduzirCategoria(item.category)}</span>
-                            ${item.rating ? `<span class="text-blue-300 font-bold flex items-center space-x-1 ml-2"><span>|</span><span>🌕</span><span>${item.rating} / 10</span></span>` : ''}
-                        </p>
-                        <div class="text-blue-200/85 space-y-1 pt-1">${extraInfo}</div>
-                    </div>
-                </div>
-                ${item.synopsis ? `<div class="space-y-1"><strong class="text-xs text-blue-200">Sinopse:</strong><p class="text-xs text-blue-200/90 leading-relaxed bg-[#0e1738]/50 p-2.5 rounded-xl border border-blue-900/30">${item.synopsis}</p></div>` : ''}
-                ${item.review ? `<div class="space-y-1"><strong class="text-xs text-blue-200">Resenha / Opinião:</strong><p class="text-xs text-amber-200/90 leading-relaxed bg-[#0e1738]/50 p-2.5 rounded-xl border border-blue-900/30 italic">"${item.review}"</p></div>` : ''}
-                <div class="pt-3 border-t border-blue-900/40 flex justify-between items-center">
-                    <div class="space-x-2">
-                        <button onclick="window.openEditModal('${item.id}')" class="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 text-xs font-semibold rounded-xl cursor-pointer">✏️ Editar</button>
-                        <button onclick="window.deleteMedia('${item.id}')" class="px-3 py-1.5 bg-rose-600/20 text-rose-300 text-xs font-semibold rounded-xl cursor-pointer">🗑️ Excluir</button>
-                    </div>
-                    <button onclick="window.closeDetailsModal()" class="px-4 py-2 bg-blue-950/60 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer">Fechar</button>
-                </div>
-            `;
-            document.getElementById('modal-details').classList.remove('hidden');
+            // Badges do Drawer
+            document.getElementById('badge-all').innerText = total;
+            document.getElementById('badge-favorites').innerText = favorites;
+            document.getElementById('badge-anime').innerText = mediaItems.filter(m => m.category === 'anime').length;
+            document.getElementById('badge-short').innerText = mediaItems.filter(m => m.category === 'short').length;
+            document.getElementById('badge-dorama').innerText = mediaItems.filter(m => m.category === 'dorama').length;
+            document.getElementById('badge-movie').innerText = mediaItems.filter(m => m.category === 'movie').length;
+            document.getElementById('badge-book').innerText = mediaItems.filter(m => m.category === 'book').length;
+            document.getElementById('badge-series').innerText = mediaItems.filter(m => m.category === 'series').length;
         };
 
-        window.closeDetailsModal = () => document.getElementById('modal-details').classList.add('hidden');
-
-        window.deleteMedia = async (id) => {
-            if (confirm('Deseja excluir esta obra?')) {
-                await deleteDoc(doc(db, 'media_obras', id));
-                window.closeDetailsModal();
-            }
-        };
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/Blue-Moon/sw.js');
-        }
+        // Executar carregamento inicial
+        window.renderMediaGrid();
+        window.updateDashboardStats();
     </script>
 </body>
 </html>
-
