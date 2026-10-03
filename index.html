@@ -93,7 +93,7 @@
 
     <div id="sidebar-backdrop" onclick="window.closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden"></div>
 
-    <!-- MENU LATERAL FLUTUANTE COM LOGIN INTEGRADO NO TOPO -->
+    <!-- MENU LATERAL FLUTUANTE COM LOGIN INTEGRADO -->
     <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
         <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -105,7 +105,6 @@
             </button>
         </div>
 
-        <!-- Seção de Conta / Autenticação no Menu -->
         <div class="p-4 border-b border-blue-900/30 bg-blue-950/20">
             <div id="auth-container" class="flex flex-col space-y-3">
                 <div id="userInfoSide" style="display:none;" class="flex items-center space-x-2.5 text-xs text-blue-200 font-medium truncate">
@@ -469,7 +468,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc, query, where, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -508,22 +507,40 @@
         let startSwipeX = 0;
         let currentSwipeX = 0;
 
-        // Monitorar estado de autenticação e carregar os dados específicos do usuário
-        onAuthStateChanged(auth, (user) => {
+        // Monitorar autenticação e migrar dados órfãos automaticamente para a conta logada
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 if (loginBtnText) loginBtnText.textContent = 'Sair da Conta';
                 if (userInfoSide) {
                     userInfoSide.style.display = 'flex';
                     userNameSide.textContent = user.displayName || user.email;
                 }
+                
+                // Migração automática de dados sem dono/antigos para a conta atual do Google
+                await migrateLocalOrGuestDataToUser(user.uid);
                 loadUserMedia(user.uid);
             } else {
                 if (loginBtnText) loginBtnText.textContent = 'Entrar com Google';
                 if (userInfoSide) userInfoSide.style.display = 'none';
-                // Se deslogado, busca itens públicos ou locais
                 loadUserMedia('guest_local_user');
             }
         });
+
+        async function migrateLocalOrGuestDataToUser(userId) {
+            try {
+                const guestQuery = query(collection(db, "media_items"), where("userId", "==", "guest_local_user"));
+                const querySnapshot = await getDocs(guestQuery);
+                if (!querySnapshot.empty) {
+                    const batch = writeBatch(db);
+                    querySnapshot.forEach((docSnap) => {
+                        batch.update(doc(db, "media_items", docSnap.id), { userId: userId });
+                    });
+                    await batch.commit();
+                }
+            } catch (e) {
+                console.error("Erro na migração automática de dados:", e);
+            }
+        }
 
         if (loginBtn) {
             loginBtn.addEventListener('click', async () => {
@@ -531,18 +548,18 @@
                     await signOut(auth);
                 } else {
                     try {
-                        await signInWithPopup(auth, provider);
+                        await signInWithPopup(appAuthInstance || auth, provider);
                     } catch (error) {
                         console.error("Erro no login:", error);
                     }
                 }
             });
         }
+        const appAuthInstance = auth;
 
         function loadUserMedia(userId) {
             if (unsubscribeSnapshot) unsubscribeSnapshot();
 
-            // Filtrar coleção pelo ID do usuário logado para nunca misturar ou zerar dados de contas diferentes
             const q = query(collection(db, "media_items"), where("userId", "==", userId));
             
             unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
@@ -1079,6 +1096,9 @@
             initFavoriteSwipe();
         });
     </script>
+
 </body>
 
 </html>
+
+
