@@ -94,10 +94,8 @@
 
     <div id="sidebar-backdrop" onclick="window.closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden"></div>
 
-    <!-- MENU LATERAL FLUTUANTE (COM BARRA DE LOGIN INTEGRADA) -->
+    <!-- MENU LATERAL FLUTUANTE -->
     <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
-        
-        <!-- Cabeçalho do Menu com Logo e Botão Fechar -->
         <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-moon text-blue-400 text-2xl"></i>
@@ -108,18 +106,15 @@
             </button>
         </div>
 
-        <!-- Seção de Autenticação Incorporada no Topo do Menu Lateral -->
-        <div class="p-4 border-b border-blue-900/30 bg-blue-950/20 flex flex-col space-y-3">
-            <div class="flex items-center justify-between">
-                <span id="userInfo" style="display:none;" class="text-xs text-blue-200 font-medium truncate max-w-[150px]"></span>
-            </div>
-            <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl font-semibold transition cursor-pointer flex items-center justify-center space-x-2 shadow-md text-xs">
-                <i class="fa-solid fa-user-circle text-sm"></i>
+        <!-- BARRA SUPERIOR DE AUTENTICAÇÃO (Movida para o topo do menu lateral) -->
+        <div id="auth-bar" class="p-3 bg-[#0b1329]/80 border-b border-blue-900/40 flex items-center justify-between text-xs px-4">
+            <span id="userInfo" style="display:none;" class="text-blue-200 font-medium"></span>
+            <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center justify-center space-x-1.5 shadow-md">
+                <i class="fa-solid fa-user-circle"></i>
                 <span id="loginBtnText">Entrar com Google</span>
             </button>
         </div>
 
-        <!-- Navegação do Menu Lateral -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-1">
             <div class="text-xs font-semibold text-blue-300/70 uppercase tracking-wider px-3 mb-2">Navegação</div>
             <button onclick="window.switchCategory('all')" id="nav-all" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
@@ -228,7 +223,9 @@
                     </h3>
                     <button type="button" onclick="window.closeFilterResults()" class="text-gray-300 hover:text-white cursor-pointer px-2.5 py-1 bg-blue-950/60 rounded-lg text-xs">Fechar ✕</button>
                 </div>
-                <div id="filter-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+                <div id="filter-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <!-- Itens filtrados serão injetados aqui dinamicamente -->
+                </div>
             </div>
 
             <section class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -276,7 +273,7 @@
             </div>
             <form id="media-form" onsubmit="window.saveMedia(event)" class="p-5 overflow-y-auto space-y-4 flex-1">
                 <input type="hidden" id="form-edit-id" value="">
-                
+                <!-- Capa -->
                 <div class="space-y-2">
                     <label class="block text-xs font-semibold text-blue-200">Capa da Obra (URL ou Enviar Ficheiro)</label>
                     <input type="url" id="form-cover-url" placeholder="https://..." class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200 mb-1">
@@ -286,6 +283,7 @@
                     </label>
                 </div>
 
+                <!-- Categoria & Status -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Categoria *</label>
@@ -309,16 +307,19 @@
                     </div>
                 </div>
 
+                <!-- Título -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Título *</label>
                     <input type="text" id="form-title" required class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                 </div>
 
+                <!-- Título Original -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Título Original</label>
                     <input type="text" id="form-original-title" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                 </div>
 
+                <!-- Bloco Específico para Livros -->
                 <div id="field-book-type-wrapper" class="hidden space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Tipo de Publicação</label>
@@ -339,11 +340,13 @@
                     </div>
                 </div>
 
+                <!-- Sinopse -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Sinopse</label>
                     <textarea id="form-synopsis" rows="2" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
                 </div>
 
+                <!-- Gênero e Duração/Páginas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Gênero</label>
@@ -365,6 +368,7 @@
                     </div>
                 </div>
 
+                <!-- Campos Dinâmicos -->
                 <div id="dynamic-fields-container" class="space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
                     <div id="field-author" class="hidden space-y-2">
                         <label class="block text-xs font-semibold text-blue-200">Autor</label>
@@ -415,6 +419,7 @@
                     </div>
                 </div>
 
+                <!-- Datas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Data de Lançamento</label>
@@ -426,6 +431,7 @@
                     </div>
                 </div>
 
+                <!-- Nota & Swipe "Favoritei" -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Nota</label>
@@ -438,6 +444,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
+                        <!-- Componente Swipe Funcional -->
                         <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
                             <div class="favorite-swipe-thumb">
@@ -447,6 +454,7 @@
                     </div>
                 </div>
 
+                <!-- Resenha -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Resenha / Opinião</label>
                     <textarea id="form-review" rows="3" placeholder="O que achou da obra?" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
@@ -486,10 +494,12 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = initializeFirestore(app, { localCache: persistentLocalCache() });
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache()
+        });
+
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        
         const loginBtn = document.getElementById('loginBtn');
         const loginBtnText = document.getElementById('loginBtnText');
         const userInfo = document.getElementById('userInfo');
@@ -498,7 +508,7 @@
             if (user) {
                 if (loginBtnText) loginBtnText.textContent = 'Sair';
                 if(userInfo) {
-                    userInfo.style.display = 'block';
+                    userInfo.style.display = 'inline';
                     userInfo.textContent = `Olá, ${user.displayName ? user.displayName.split(' ')[0] : 'Utilizador'}`;
                 }
             } else {
@@ -521,30 +531,98 @@
             });
         }
 
-        // Funções de controle do Menu Lateral
-        window.openSidebar = () => {
-            document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.remove('hidden');
-        };
-
-        window.closeSidebar = () => {
-            document.getElementById('sidebar-drawer').classList.add('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.add('hidden');
-        };
-
         let mediaItems = [];
         let currentCategory = 'all';
         let tempCoverBase64 = '';
 
-        // Controles globais e de interface simulados/integrados
-        window.switchCategory = (cat) => { currentCategory = cat; window.closeSidebar(); };
-        window.openAddModal = () => { document.getElementById('modal-add-edit').classList.remove('hidden'); };
-        window.closeAddModal = () => { document.getElementById('modal-add-edit').classList.add('hidden'); };
-        window.openBannerModal = () => { document.getElementById('modal-banner').classList.remove('hidden'); };
-        window.closeBannerModal = () => { document.getElementById('modal-banner').classList.add('hidden'); };
-        window.closeFilterResults = () => { document.getElementById('filter-results-container').classList.add('hidden'); };
-        window.closeDetailsModal = () => { document.getElementById('modal-details').classList.add('hidden'); };
-        window.renderMediaGrid = () => {};
+        // --- CONTROLO DO SWIPE DE FAVORITO NO FORMULÁRIO ---
+        let isSwiping = false;
+        let startSwipeX = 0;
+        let currentSwipeX = 0;
+
+        window.setFavoriteSwipeState = (isFav, triggerAnimation = true) => {
+            const track = document.getElementById('modal-favorite-swipe');
+            const label = document.getElementById('favorite-swipe-label');
+            const thumb = track ? track.querySelector('.favorite-swipe-thumb') : null;
+            if (!track || !thumb) return;
+
+            const trackWidth = track.clientWidth || 260;
+            const maxTranslate = trackWidth - 44; 
+
+            track.style.setProperty('--track-width', `${trackWidth}px`);
+
+            if (!triggerAnimation) {
+                thumb.style.transition = 'none';
+            } else {
+                thumb.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease';
+            }
+
+            if (isFav) {
+                track.classList.add('active-fav');
+                track.setAttribute('data-is-favorite', 'true');
+                if (label) label.textContent = 'Favoritado!';
+                thumb.style.transform = `translateX(${maxTranslate}px)`;
+            } else {
+                track.classList.remove('active-fav');
+                track.setAttribute('data-is-favorite', 'false');
+                if (label) label.textContent = 'Deslize para Favoritar';
+                thumb.style.transform = `translateX(0px)`;
+            }
+        };
+
+        window.toggleFavoriteSwipe = () => {
+            const track = document.getElementById('modal-favorite-swipe');
+            if (!track) return;
+            const current = track.getAttribute('data-is-favorite') === 'true';
+            window.setFavoriteSwipeState(!current, true);
+        };
+
+        // Eventos de arrastar para o Swipe
+        document.addEventListener('DOMContentLoaded', () => {
+            const track = document.getElementById('modal-favorite-swipe');
+            if (!track) return;
+
+            const thumb = track.querySelector('.favorite-swipe-thumb');
+            if (!thumb) return;
+
+            track.addEventListener('pointerdown', (e) => {
+                isSwiping = true;
+                startSwipeX = e.clientX;
+                thumb.style.transition = 'none';
+                track.setPointerCapture(e.pointerId);
+                e.preventDefault();
+            });
+
+            track.addEventListener('pointermove', (e) => {
+                if (!isSwiping) return;
+                const trackWidth = track.clientWidth || 260;
+                const maxTranslate = trackWidth - 44;
+                
+                const diffX = e.clientX - startSwipeX;
+                currentSwipeX = Math.max(0, Math.min(diffX, maxTranslate));
+
+                thumb.style.transform = `translateX(${currentSwipeX}px)`;
+                
+                if (currentSwipeX > maxTranslate / 2) {
+                    track.classList.add('active-fav');
+                } else {
+                    track.classList.remove('active-fav');
+                }
+            });
+
+            track.addEventListener('pointerup', (e) => {
+                if (!isSwiping) return;
+                isSwiping = false;
+                const trackWidth = track.clientWidth || 260;
+                const maxTranslate = trackWidth - 44;
+
+                if (currentSwipeX > maxTranslate / 2) {
+                    window.setFavoriteSwipeState(true, true);
+                } else {
+                    window.setFavoriteSwipeState(false, true);
+                }
+            });
+        });
     </script>
 </body>
 </html>
