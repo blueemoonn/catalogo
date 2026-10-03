@@ -39,7 +39,6 @@
         .modal-animate-in { animation: modalFadeIn 0.2s ease-out forwards; }
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* Estilos do Swipe de Coração ("Favoritei") Super Fluido e Funcional */
         .favorite-swipe-track {
             position: relative;
             width: 100%;
@@ -90,20 +89,11 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col relative overflow-x-hidden pt-10">
-
-    <!-- BARRA SUPERIOR DE AUTENTICAÇÃO -->
-    <div id="auth-bar" class="fixed top-0 left-0 right-0 h-10 bg-[#0b1329]/95 backdrop-blur-md border-b border-blue-900/40 z-[1001] flex items-center justify-end px-4 space-x-3 text-xs">
-        <span id="userInfo" style="display:none;" class="text-blue-200 font-medium"></span>
-        <button id="loginBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-md">
-            <i class="fa-solid fa-user-circle"></i>
-            <span id="loginBtnText">Entrar com Google</span>
-        </button>
-    </div>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden">
 
     <div id="sidebar-backdrop" onclick="window.closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden"></div>
 
-    <!-- MENU LATERAL FLUTUANTE -->
+    <!-- MENU LATERAL FLUTUANTE COM LOGIN INTEGRADO NO TOPO -->
     <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
         <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -113,6 +103,20 @@
             <button onclick="window.closeSidebar()" class="p-2 text-gray-400 hover:text-white rounded-lg cursor-pointer">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
+        </div>
+
+        <!-- Seção de Conta / Autenticação no Menu -->
+        <div class="p-4 border-b border-blue-900/30 bg-blue-950/20">
+            <div id="auth-container" class="flex flex-col space-y-3">
+                <div id="userInfoSide" style="display:none;" class="flex items-center space-x-2.5 text-xs text-blue-200 font-medium truncate">
+                    <i class="fa-solid fa-user-circle text-blue-400 text-base"></i>
+                    <span id="userNameSide" class="truncate"></span>
+                </div>
+                <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl font-semibold transition cursor-pointer flex items-center justify-center space-x-2 shadow-md text-xs">
+                    <i class="fa-brands fa-google"></i>
+                    <span id="loginBtnText">Entrar com Google</span>
+                </button>
+            </div>
         </div>
 
         <nav class="flex-1 overflow-y-auto p-4 space-y-1">
@@ -155,7 +159,7 @@
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0">
-        <header id="hero-header" class="hero-banner relative transition-all duration-500 py-20 sm:py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 mt-6">
+        <header id="hero-header" class="hero-banner relative transition-all duration-500 py-20 sm:py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10">
             <button onclick="window.openSidebar()" class="absolute top-4 left-4 bg-[#131f3d]/70 hover:bg-[#131f3d] text-gray-200 hover:text-white px-3.5 py-2 rounded-xl border border-blue-500/25 text-xs font-medium flex items-center space-x-2 backdrop-blur-md cursor-pointer transition shadow-lg z-10">
                 <i class="fa-solid fa-bars text-sm"></i><span class="font-semibold tracking-wider">MENU</span>
             </button>
@@ -184,7 +188,6 @@
                 </button>
             </section>
 
-            <!-- Cards de Estatísticas Funcionais -->
             <section id="stats-section">
                 <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     <div onclick="window.filterStoriesCard('all')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between shadow-xl cursor-pointer hover:border-blue-400 transition-all">
@@ -214,7 +217,6 @@
                 </div>
             </section>
 
-            <!-- Área Expansível / Container de Resultados do Filtro por Card -->
             <div id="filter-results-container" class="hidden glass-card p-6 rounded-2xl border border-blue-500/40 shadow-2xl transition-all duration-300 space-y-4">
                 <div class="flex items-center justify-between border-b border-blue-900/40 pb-3">
                     <h3 id="filter-results-title" class="text-base font-bold text-white flex items-center space-x-2">
@@ -223,9 +225,7 @@
                     </h3>
                     <button type="button" onclick="window.closeFilterResults()" class="text-gray-300 hover:text-white cursor-pointer px-2.5 py-1 bg-blue-950/60 rounded-lg text-xs">Fechar ✕</button>
                 </div>
-                <div id="filter-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <!-- Itens filtrados serão injetados aqui dinamicamente -->
-                </div>
+                <div id="filter-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto pr-2"></div>
             </div>
 
             <section class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -273,7 +273,6 @@
             </div>
             <form id="media-form" onsubmit="window.saveMedia(event)" class="p-5 overflow-y-auto space-y-4 flex-1">
                 <input type="hidden" id="form-edit-id" value="">
-                <!-- Capa -->
                 <div class="space-y-2">
                     <label class="block text-xs font-semibold text-blue-200">Capa da Obra (URL ou Enviar Ficheiro)</label>
                     <input type="url" id="form-cover-url" placeholder="https://..." class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200 mb-1">
@@ -283,7 +282,6 @@
                     </label>
                 </div>
 
-                <!-- Categoria & Status -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Categoria *</label>
@@ -307,19 +305,16 @@
                     </div>
                 </div>
 
-                <!-- Título -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Título *</label>
                     <input type="text" id="form-title" required class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                 </div>
 
-                <!-- Título Original -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Título Original</label>
                     <input type="text" id="form-original-title" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                 </div>
 
-                <!-- Bloco Específico para Livros -->
                 <div id="field-book-type-wrapper" class="hidden space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Tipo de Publicação</label>
@@ -340,13 +335,11 @@
                     </div>
                 </div>
 
-                <!-- Sinopse -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Sinopse</label>
                     <textarea id="form-synopsis" rows="2" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
                 </div>
 
-                <!-- Gênero e Duração/Páginas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Gênero</label>
@@ -368,7 +361,6 @@
                     </div>
                 </div>
 
-                <!-- Campos Dinâmicos -->
                 <div id="dynamic-fields-container" class="space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
                     <div id="field-author" class="hidden space-y-2">
                         <label class="block text-xs font-semibold text-blue-200">Autor</label>
@@ -419,7 +411,6 @@
                     </div>
                 </div>
 
-                <!-- Datas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Data de Lançamento</label>
@@ -431,7 +422,6 @@
                     </div>
                 </div>
 
-                <!-- Nota & Swipe "Favoritei" -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Nota</label>
@@ -444,7 +434,6 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
-                        <!-- Componente Swipe Funcional -->
                         <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
                             <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
                             <div class="favorite-swipe-thumb">
@@ -454,7 +443,6 @@
                     </div>
                 </div>
 
-                <!-- Resenha -->
                 <div>
                     <label class="block text-xs font-semibold text-blue-200 mb-1">Resenha / Opinião</label>
                     <textarea id="form-review" rows="3" placeholder="O que achou da obra?" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
@@ -481,7 +469,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -500,20 +488,40 @@
 
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
+        
         const loginBtn = document.getElementById('loginBtn');
         const loginBtnText = document.getElementById('loginBtnText');
-        const userInfo = document.getElementById('userInfo');
+        const userInfoSide = document.getElementById('userInfoSide');
+        const userNameSide = document.getElementById('userNameSide');
 
+        let unsubscribeSnapshot = null;
+        let mediaItems = [];
+        let currentCategory = 'all';
+        let tempCoverBase64 = '';
+        let currentBannerBase64 = '';
+        let formGenres = [];
+        let formAuthors = [];
+        let formDirectors = [];
+        let formCreators = [];
+
+        let isSwiping = false;
+        let startSwipeX = 0;
+        let currentSwipeX = 0;
+
+        // Monitorar estado de autenticação e carregar os dados específicos do usuário
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                if (loginBtnText) loginBtnText.textContent = 'Sair';
-                if(userInfo) {
-                    userInfo.style.display = 'inline';
-                    userInfo.textContent = `Olá, ${user.displayName ? user.displayName.split(' ')[0] : 'Utilizador'}`;
+                if (loginBtnText) loginBtnText.textContent = 'Sair da Conta';
+                if (userInfoSide) {
+                    userInfoSide.style.display = 'flex';
+                    userNameSide.textContent = user.displayName || user.email;
                 }
+                loadUserMedia(user.uid);
             } else {
                 if (loginBtnText) loginBtnText.textContent = 'Entrar com Google';
-                if(userInfo) userInfo.style.display = 'none';
+                if (userInfoSide) userInfoSide.style.display = 'none';
+                // Se deslogado, busca itens públicos ou locais
+                loadUserMedia('guest_local_user');
             }
         });
 
@@ -531,19 +539,23 @@
             });
         }
 
-        let mediaItems = [];
-        let currentCategory = 'all';
-        let tempCoverBase64 = '';
-        let currentBannerBase64 = '';
-        let formGenres = [];
-        let formAuthors = [];
-        let formDirectors = [];
-        let formCreators = [];
+        function loadUserMedia(userId) {
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
 
-        // --- CONTROLO DO SWIPE DE FAVORITO NO FORMULÁRIO ---
-        let isSwiping = false;
-        let startSwipeX = 0;
-        let currentSwipeX = 0;
+            // Filtrar coleção pelo ID do usuário logado para nunca misturar ou zerar dados de contas diferentes
+            const q = query(collection(db, "media_items"), where("userId", "==", userId));
+            
+            unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+                mediaItems = [];
+                snapshot.forEach((docSnap) => {
+                    mediaItems.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                updateStatsAndBadges();
+                window.renderMediaGrid();
+            }, (error) => {
+                console.error("Erro ao escutar dados do Firestore:", error);
+            });
+        }
 
         window.setFavoriteSwipeState = (isFav, triggerAnimation = true) => {
             const track = document.getElementById('modal-favorite-swipe');
@@ -625,7 +637,6 @@
             window.addEventListener('touchmove', onMove, { passive: false });
             window.addEventListener('touchend', onEnd);
 
-            // Clique simples para alternar se for apenas um toque rápido
             track.addEventListener('click', (e) => {
                 if (Math.abs((currentSwipeX || startSwipeX) - startSwipeX) < 5) {
                     const isCurrentlyFav = track.getAttribute('data-is-favorite') === 'true';
@@ -634,7 +645,6 @@
             });
         }
 
-        // --- GESTÃO DE TAGS (Gêneros, Autores, etc) ---
         window.addFormTag = (type, inputId) => {
             const input = document.getElementById(inputId);
             if (!input || !input.value.trim()) return;
@@ -668,7 +678,6 @@
             `).join('');
         }
 
-        // --- ALTERNÂNCIA DE CAMPOS DINÂMICOS CONFORME CATEGORIA ---
         window.toggleCategoryFields = () => {
             const cat = document.getElementById('form-category').value;
             const durationLabel = document.getElementById('form-duration-label');
@@ -682,7 +691,6 @@
             const fSeasonsEps = document.getElementById('field-seasons-eps');
             const fOvas = document.getElementById('field-ovas-wrapper');
 
-            // Reset visibilidades
             fBook.classList.add('hidden');
             fAuthor.classList.add('hidden');
             fDirector.classList.add('hidden');
@@ -750,15 +758,12 @@
             valSpan.textContent = val;
         };
 
-        // --- MANIPULAÇÃO DE ARQUIVOS (CAPAS E BANNERS) ---
         window.handleCoverFile = (event) => {
             const file = event.target.files[0];
             if (!file) return;
             document.getElementById('cover-file-label').textContent = file.name;
             const reader = new FileReader();
-            reader.onload = (e) => {
-                tempCoverBase64 = e.target.result;
-            };
+            reader.onload = (e) => { tempCoverBase64 = e.target.result; };
             reader.readAsDataURL(file);
         };
 
@@ -767,9 +772,7 @@
             if (!file) return;
             document.getElementById('banner-file-name').textContent = file.name;
             const reader = new FileReader();
-            reader.onload = (e) => {
-                currentBannerBase64 = e.target.result;
-            };
+            reader.onload = (e) => { currentBannerBase64 = e.target.result; };
             reader.readAsDataURL(file);
         };
 
@@ -781,13 +784,11 @@
             window.closeBannerModal();
         };
 
-        // Carregar Banner salvo
         const savedBanner = localStorage.getItem('blue_moon_banner');
         if (savedBanner) {
             document.getElementById('hero-header').style.setProperty('--banner-bg', `url('${savedBanner}')`);
         }
 
-        // --- CONTROLO DE MODAIS ---
         window.openSidebar = () => {
             document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
             document.getElementById('sidebar-backdrop').classList.remove('hidden');
@@ -857,26 +858,16 @@
         window.closeAddModal = () => document.getElementById('modal-add-edit').classList.add('hidden');
         window.closeDetailsModal = () => document.getElementById('modal-details').classList.add('hidden');
 
-        // --- FIRESTORE E DADOS ---
         const mediaCollection = collection(db, "media_items");
-
-        onSnapshot(mediaCollection, (snapshot) => {
-            mediaItems = [];
-            snapshot.forEach((docSnap) => {
-                mediaItems.push({ id: docSnap.id, ...docSnap.data() });
-            });
-            updateStatsAndBadges();
-            window.renderMediaGrid();
-        }, (error) => {
-            console.error("Erro ao escutar dados do Firestore:", error);
-        });
 
         window.saveMedia = async (e) => {
             e.preventDefault();
             const editId = document.getElementById('form-edit-id').value;
             const isFavTrack = document.getElementById('modal-favorite-swipe');
+            const currentUserId = auth.currentUser ? auth.currentUser.uid : 'guest_local_user';
             
             const payload = {
+                userId: currentUserId,
                 coverUrl: document.getElementById('form-cover-url').value,
                 coverBase64: tempCoverBase64,
                 category: document.getElementById('form-category').value,
@@ -928,7 +919,6 @@
             }
         };
 
-        // --- NAVEGAÇÃO E FILTROS ---
         window.switchCategory = (category) => {
             currentCategory = category;
             window.closeSidebar();
@@ -1085,10 +1075,10 @@
             document.getElementById('modal-details').classList.remove('hidden');
         };
 
-        // Inicializar o componente de swipe ao carregar a página
         document.addEventListener('DOMContentLoaded', () => {
             initFavoriteSwipe();
         });
     </script>
 </body>
+
 </html>
