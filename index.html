@@ -39,7 +39,6 @@
         .modal-animate-in { animation: modalFadeIn 0.2s ease-out forwards; }
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* Estilos do Swipe de Coração ("Favoritei") Super Fluido e Funcional */
         .favorite-swipe-track {
             position: relative;
             width: 100%;
@@ -94,7 +93,7 @@
 
     <div id="sidebar-backdrop" onclick="window.closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden"></div>
 
-    <!-- MENU LATERAL FLUTUANTE COM LOGIN NO TOPO -->
+    <!-- MENU LATERAL COM LOGIN NO TOPO -->
     <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
         <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -106,7 +105,7 @@
             </button>
         </div>
 
-        <!-- BLOCO DE LOGIN NO TOPO DO MENU -->
+        <!-- BLOCO DE LOGIN NO TOPO -->
         <div class="p-4 border-b border-blue-900/40 bg-blue-950/20 flex flex-col space-y-2">
             <div id="userInfo" style="display:none;" class="text-blue-200 text-xs font-medium text-center truncate"></div>
             <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-center space-x-2 shadow-md">
@@ -184,7 +183,6 @@
                 </button>
             </section>
 
-            <!-- Cards de Estatísticas Funcionais -->
             <section id="stats-section">
                 <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     <div onclick="window.filterStoriesCard('all')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between shadow-xl cursor-pointer hover:border-blue-400 transition-all">
@@ -214,7 +212,6 @@
                 </div>
             </section>
 
-            <!-- Área Expansível / Container de Resultados do Filtro por Card -->
             <div id="filter-results-container" class="hidden glass-card p-6 rounded-2xl border border-blue-500/40 shadow-2xl transition-all duration-300 space-y-4">
                 <div class="flex items-center justify-between border-b border-blue-900/40 pb-3">
                     <h3 id="filter-results-title" class="text-base font-bold text-white flex items-center space-x-2">
@@ -358,53 +355,6 @@
                     </div>
                 </div>
 
-                <div id="dynamic-fields-container" class="space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
-                    <div id="field-author" class="hidden space-y-2">
-                        <label class="block text-xs font-semibold text-blue-200">Autor</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-author-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Nome do autor" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('author','input-author-temp');}">
-                            <button type="button" onclick="window.addFormTag('author','input-author-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="author-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-                    <div id="field-director" class="hidden space-y-2">
-                        <label class="block text-xs font-semibold text-blue-200">Diretor</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-director-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Nome do diretor" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('director','input-director-temp');}">
-                            <button type="button" onclick="window.addFormTag('director','input-director-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="director-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-                    <div id="field-creator" class="hidden space-y-2">
-                        <label class="block text-xs font-semibold text-blue-200">Criador</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-creator-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Nome do criador" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('creator','input-creator-temp');}">
-                            <button type="button" onclick="window.addFormTag('creator','input-creator-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="creator-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-                    <div id="field-seasons-eps" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">Temporada</label>
-                            <input type="number" id="form-season" min="1" value="1" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">Nº de Episódios</label>
-                            <input type="number" id="form-episodes" min="0" value="0" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                        <div id="field-ovas-wrapper" class="hidden">
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">OVAs</label>
-                            <input type="number" id="form-ovas" min="0" value="0" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Data de Lançamento</label>
@@ -420,10 +370,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-blue-200 mb-1">Nota</label>
                         <div class="flex items-center space-x-2">
-                            <input type="number" id="form-rating" min="0" max="10" step="0.5" placeholder="8.5" oninput="window.updateFormRatingPreview(this.value)" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                            <span id="form-rating-star" class="text-blue-300 font-semibold text-sm hidden flex items-center space-x-1 shrink-0">
-                                <span>🌕</span><span id="form-rating-val"></span>
-                            </span>
+                            <input type="number" id="form-rating" min="0" max="10" step="0.5" placeholder="8.5" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
                         </div>
                     </div>
                     <div>
@@ -489,15 +436,14 @@
         window.allStories = [];
         window.currentCategory = 'all';
 
-        // Recuperar dados locais antigos caso existam para resgatar o que sumiu
-        const localData = localStorage.getItem('blue_moon_local_stories');
+        // Tenta recuperar do armazenamento local antigo
+        const localData = localStorage.getItem('blue_moon_local_stories') || localStorage.getItem('blue_moon_stories');
         if (localData) {
             try {
                 window.allStories = JSON.parse(localData);
             } catch(e) {}
         }
 
-        // Funções de UI básicas
         window.openSidebar = () => {
             document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
             document.getElementById('sidebar-backdrop').classList.remove('hidden');
@@ -508,25 +454,11 @@
             document.getElementById('sidebar-backdrop').classList.add('hidden');
         };
 
-        window.openAddModal = () => {
-            document.getElementById('modal-add-edit').classList.remove('hidden');
-        };
-
-        window.closeAddModal = () => {
-            document.getElementById('modal-add-edit').classList.add('hidden');
-        };
-
-        window.closeBannerModal = () => {
-            document.getElementById('modal-banner').classList.add('hidden');
-        };
-
-        window.openBannerModal = () => {
-            document.getElementById('modal-banner').classList.remove('hidden');
-        };
-
-        window.closeDetailsModal = () => {
-            document.getElementById('modal-details').classList.add('hidden');
-        };
+        window.openAddModal = () => document.getElementById('modal-add-edit').classList.remove('hidden');
+        window.closeAddModal = () => document.getElementById('modal-add-edit').classList.add('hidden');
+        window.closeBannerModal = () => document.getElementById('modal-banner').classList.add('hidden');
+        window.openBannerModal = () => document.getElementById('modal-banner').classList.remove('hidden');
+        window.closeDetailsModal = () => document.getElementById('modal-details').classList.add('hidden');
 
         window.switchCategory = (cat) => {
             window.currentCategory = cat;
@@ -588,7 +520,6 @@
             if(document.getElementById('stat-abandoned')) document.getElementById('stat-abandoned').textContent = abandoned;
             if(document.getElementById('stat-favorites')) document.getElementById('stat-favorites').textContent = favorites;
 
-            // Badges do menu
             if(document.getElementById('badge-all')) document.getElementById('badge-all').textContent = total;
             if(document.getElementById('badge-favorites')) document.getElementById('badge-favorites').textContent = favorites;
             ['anime','short','dorama','movie','book','series'].forEach(cat => {
@@ -626,7 +557,6 @@
                     userInfo.style.display = 'block';
                     userInfo.textContent = `Olá, ${user.displayName ? user.displayName.split(' ')[0] : 'Utilizador'}`;
                 }
-                // Carregar do Firestore do utilizador
                 try {
                     const q = collection(db, `users/${user.uid}/stories`);
                     const querySnapshot = await getDocs(q);
@@ -634,8 +564,14 @@
                     querySnapshot.forEach((docSnap) => {
                         cloudStories.push({ id: docSnap.id, ...docSnap.data() });
                     });
+                    
                     if (cloudStories.length > 0) {
                         window.allStories = cloudStories;
+                    } else if (window.allStories.length > 0) {
+                        for (const item of window.allStories) {
+                            const { id, ...dataToSave } = item;
+                            await addDoc(collection(db, `users/${user.uid}/stories`), dataToSave);
+                        }
                     }
                 } catch(e) { console.error(e); }
             } else {
@@ -659,7 +595,6 @@
             });
         }
 
-        // Renderização inicial
         window.renderMediaGrid();
     </script>
 </body>
