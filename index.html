@@ -94,7 +94,7 @@
 
     <div id="sidebar-backdrop" onclick="window.closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden"></div>
 
-    <!-- MENU LATERAL FLUTUANTE COM A BARRA DE LOGIN INTEGRADA -->
+    <!-- MENU LATERAL FLUTUANTE COM LOGIN NO TOPO -->
     <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
         <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -103,6 +103,15 @@
             </div>
             <button onclick="window.closeSidebar()" class="p-2 text-gray-400 hover:text-white rounded-lg cursor-pointer">
                 <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <!-- BLOCO DE LOGIN NO TOPO DO MENU -->
+        <div class="p-4 border-b border-blue-900/40 bg-blue-950/20 flex flex-col space-y-2">
+            <div id="userInfo" style="display:none;" class="text-blue-200 text-xs font-medium text-center truncate"></div>
+            <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-center space-x-2 shadow-md">
+                <i class="fa-solid fa-user-circle"></i>
+                <span id="loginBtnText">Entrar com Google</span>
             </button>
         </div>
 
@@ -143,15 +152,6 @@
                 <span id="badge-series" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
             </button>
         </nav>
-
-        <!-- RODAPÉ DO MENU LATERAL (CONTA / LOGIN) -->
-        <div class="p-4 border-t border-blue-900/40 bg-[#0b1329]/60 flex flex-col space-y-2">
-            <div id="userInfo" style="display:none;" class="text-blue-200 text-xs font-medium text-center truncate"></div>
-            <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-center space-x-2 shadow-md">
-                <i class="fa-solid fa-user-circle"></i>
-                <span id="loginBtnText">Entrar com Google</span>
-            </button>
-        </div>
     </aside>
 
     <div class="flex-1 flex flex-col min-w-0">
@@ -463,7 +463,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -486,17 +486,163 @@
         const loginBtnText = document.getElementById('loginBtnText');
         const userInfo = document.getElementById('userInfo');
 
-        onAuthStateChanged(auth, (user) => {
+        window.allStories = [];
+        window.currentCategory = 'all';
+
+        // Recuperar dados locais antigos caso existam para resgatar o que sumiu
+        const localData = localStorage.getItem('blue_moon_local_stories');
+        if (localData) {
+            try {
+                window.allStories = JSON.parse(localData);
+            } catch(e) {}
+        }
+
+        // Funções de UI básicas
+        window.openSidebar = () => {
+            document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+        };
+
+        window.closeSidebar = () => {
+            document.getElementById('sidebar-drawer').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        };
+
+        window.openAddModal = () => {
+            document.getElementById('modal-add-edit').classList.remove('hidden');
+        };
+
+        window.closeAddModal = () => {
+            document.getElementById('modal-add-edit').classList.add('hidden');
+        };
+
+        window.closeBannerModal = () => {
+            document.getElementById('modal-banner').classList.add('hidden');
+        };
+
+        window.openBannerModal = () => {
+            document.getElementById('modal-banner').classList.remove('hidden');
+        };
+
+        window.closeDetailsModal = () => {
+            document.getElementById('modal-details').classList.add('hidden');
+        };
+
+        window.switchCategory = (cat) => {
+            window.currentCategory = cat;
+            window.renderMediaGrid();
+            window.closeSidebar();
+        };
+
+        window.renderMediaGrid = () => {
+            const grid = document.getElementById('media-grid');
+            const emptyState = document.getElementById('empty-state');
+            if(!grid) return;
+
+            let filtered = window.allStories;
+            if (window.currentCategory === 'favorites') {
+                filtered = filtered.filter(item => item.favorite);
+            } else if (window.currentCategory !== 'all') {
+                filtered = filtered.filter(item => item.category === window.currentCategory);
+            }
+
+            const searchInput = document.getElementById('search-input');
+            if (searchInput && searchInput.value.trim() !== '') {
+                const q = searchInput.value.toLowerCase();
+                filtered = filtered.filter(item => item.title && item.title.toLowerCase().includes(q));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                if(emptyState) emptyState.classList.remove('hidden');
+            } else {
+                if(emptyState) emptyState.classList.add('hidden');
+                grid.innerHTML = filtered.map(item => `
+                    <div class="glass-card rounded-2xl overflow-hidden border border-blue-500/20 hover:border-blue-400 transition flex flex-col cursor-pointer" onclick="window.openDetails('${item.id}')">
+                        <div class="aspect-[3/4] bg-blue-950 relative overflow-hidden">
+                            <img src="${item.cover || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=400&auto=format&fit=crop'}" class="w-full h-full object-cover">
+                            ${item.favorite ? '<span class="absolute top-2 right-2 bg-rose-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-heart"></i></span>' : ''}
+                        </div>
+                        <div class="p-3 flex flex-col flex-1 justify-between">
+                            <h4 class="text-xs font-bold text-white truncate">${item.title}</h4>
+                            <span class="text-[10px] text-blue-300 mt-1 uppercase">${item.category}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            window.updateStats();
+        };
+
+        window.updateStats = () => {
+            const total = window.allStories.length;
+            const completed = window.allStories.filter(i => i.status === 'completed').length;
+            const inProgress = window.allStories.filter(i => i.status === 'in-progress').length;
+            const planned = window.allStories.filter(i => i.status === 'planned').length;
+            const abandoned = window.allStories.filter(i => i.status === 'abandoned').length;
+            const favorites = window.allStories.filter(i => i.favorite).length;
+
+            if(document.getElementById('stat-acervo')) document.getElementById('stat-acervo').textContent = total;
+            if(document.getElementById('stat-completed')) document.getElementById('stat-completed').textContent = completed;
+            if(document.getElementById('stat-in-progress')) document.getElementById('stat-in-progress').textContent = inProgress;
+            if(document.getElementById('stat-planned')) document.getElementById('stat-planned').textContent = planned;
+            if(document.getElementById('stat-abandoned')) document.getElementById('stat-abandoned').textContent = abandoned;
+            if(document.getElementById('stat-favorites')) document.getElementById('stat-favorites').textContent = favorites;
+
+            // Badges do menu
+            if(document.getElementById('badge-all')) document.getElementById('badge-all').textContent = total;
+            if(document.getElementById('badge-favorites')) document.getElementById('badge-favorites').textContent = favorites;
+            ['anime','short','dorama','movie','book','series'].forEach(cat => {
+                const count = window.allStories.filter(i => i.category === cat).length;
+                const el = document.getElementById(`badge-${cat}`);
+                if(el) el.textContent = count;
+            });
+        };
+
+        window.openDetails = (id) => {
+            const item = window.allStories.find(i => i.id === id);
+            if(!item) return;
+            const content = document.getElementById('details-content');
+            if(!content) return;
+            content.innerHTML = `
+                <div class="flex space-x-4">
+                    <img src="${item.cover || ''}" class="w-28 h-40 object-cover rounded-xl border border-blue-500/30">
+                    <div class="space-y-1 flex-1">
+                        <h4 class="text-base font-bold text-white">${item.title}</h4>
+                        <p class="text-xs text-blue-300">${item.originalTitle || ''}</p>
+                        <p class="text-xs text-gray-300 pt-2 line-clamp-3">${item.synopsis || 'Sem sinopse.'}</p>
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end space-x-2">
+                    <button onclick="window.closeDetailsModal()" class="px-4 py-2 bg-blue-950 text-gray-200 text-xs rounded-xl">Fechar</button>
+                </div>
+            `;
+            document.getElementById('modal-details').classList.remove('hidden');
+        };
+
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 if (loginBtnText) loginBtnText.textContent = 'Sair';
                 if(userInfo) {
                     userInfo.style.display = 'block';
                     userInfo.textContent = `Olá, ${user.displayName ? user.displayName.split(' ')[0] : 'Utilizador'}`;
                 }
+                // Carregar do Firestore do utilizador
+                try {
+                    const q = collection(db, `users/${user.uid}/stories`);
+                    const querySnapshot = await getDocs(q);
+                    const cloudStories = [];
+                    querySnapshot.forEach((docSnap) => {
+                        cloudStories.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    if (cloudStories.length > 0) {
+                        window.allStories = cloudStories;
+                    }
+                } catch(e) { console.error(e); }
             } else {
                 if (loginBtnText) loginBtnText.textContent = 'Entrar com Google';
                 if(userInfo) userInfo.style.display = 'none';
             }
+            window.renderMediaGrid();
         });
 
         if (loginBtn) {
@@ -513,16 +659,8 @@
             });
         }
 
-        // Funções globais de controle do menu lateral
-        window.openSidebar = () => {
-            document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.remove('hidden');
-        };
-
-        window.closeSidebar = () => {
-            document.getElementById('sidebar-drawer').classList.add('-translate-x-full');
-            document.getElementById('sidebar-backdrop').classList.add('hidden');
-        };
+        // Renderização inicial
+        window.renderMediaGrid();
     </script>
 </body>
 </html>
