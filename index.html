@@ -479,7 +479,7 @@
         </div>
     </div>
 
-    <script type="module">
+        <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
@@ -533,6 +533,7 @@
 
         let mediaItems = [];
         let currentCategory = 'all';
+        let currentCardFilter = null; // Filtro dos cards de estatística
         let tempCoverBase64 = '';
         let formTags = { genre: [], author: [], director: [], creator: [] };
 
@@ -696,7 +697,6 @@
             const durationUnit = document.getElementById('form-duration-unit');
             const plannedOpt = document.getElementById('option-planned');
 
-            // Reset visibilidades
             bookWrapper.classList.add('hidden');
             authorField.classList.add('hidden');
             directorField.classList.add('hidden');
@@ -780,35 +780,279 @@
 
         window.switchCategory = (cat) => {
             currentCategory = cat;
+            currentCardFilter = null;
             window.closeSidebar();
             window.closeFilterResults();
             window.renderMediaGrid();
+            window.updateSidebarActiveState();
         };
 
+        window.updateSidebarActiveState = () => {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-blue-950/80', 'border', 'border-blue-500/30'));
+            const activeBtn = document.getElementById(`nav-${currentCategory}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-950/80', 'border', 'border-blue-500/30');
+            }
+        };
+
+        // --- RENDERIZAÇÃO DOS CARDS NO GRID PRINCIPAL ---
         window.renderMediaGrid = () => {
-            // Renderização principal do grid conforme listagem e filtros
-            // (Conectado ao Firebase em tempo real nas próximas atualizações)
+            const grid = document.getElementById('media-grid');
+            const emptyState = document.getElementById('empty-state');
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            if (!grid) return;
+
+            let filtered = mediaItems.filter(item => {
+                const matchesCategory = currentCategory === 'all' || 
+                                       (currentCategory === 'favorites' ? item.favorite : item.category === currentCategory);
+                const matchesSearch = !searchTerm || (item.title && item.title.toLowerCase().includes(searchTerm));
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+
+            grid.innerHTML = filtered.map(item => {
+                const cover = item.cover || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600&auto=format&fit=crop';
+                return `
+                    <div onclick="window.openDetails('${item.id}')" class="glass-card rounded-2xl overflow-hidden border border-blue-500/20 hover:border-blue-400 transition-all duration-300 cursor-pointer flex flex-col group shadow-lg">
+                        <div class="relative aspect-[3/4] w-full overflow-hidden bg-blue-950">
+                            <img src="${cover}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            ${item.favorite ? '<div class="absolute top-2 right-2 w-7 h-7 bg-rose-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-md"><i class="fa-solid fa-heart text-xs"></i></div>' : ''}
+                            ${item.rating ? `<div class="absolute bottom-2 left-2 px-2 py-0.5 bg-black/70 backdrop-blur-md rounded-lg text-[10px] font-bold text-amber-400 flex items-center space-x-1"><span>🌕</span><span>${item.rating}</span></div>` : ''}
+                        </div>
+                        <div class="p-3 flex flex-col flex-1 justify-between">
+                            <h4 class="text-xs font-bold text-white line-clamp-1 group-hover:text-blue-300 transition">${item.title}</h4>
+                            <span class="text-[10px] text-blue-200/60 uppercase mt-1">${item.category}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         };
 
+        // --- FILTROS DOS CARDS DE ESTATÍSTICA ---
         window.filterStoriesCard = (filterType) => {
+            currentCardFilter = filterType;
             const container = document.getElementById('filter-results-container');
             const titleText = document.getElementById('filter-title-text');
+            const resultsGrid = document.getElementById('filter-results-grid');
+            
             container.classList.remove('hidden');
-            titleText.textContent = `Filtro: ${filterType.toUpperCase()}`;
+            
+            let title = 'Filtrado';
+            let filtered = mediaItems.filter(item => {
+                if (filterType === 'completed') return item.status === 'completed';
+                if (filterType === 'in-progress') return item.status === 'in-progress';
+                if (filterType === 'planned') return item.status === 'planned';
+                if (filterType === 'abandoned') return item.status === 'abandoned';
+                if (filterType === 'favorites') return item.favorite === true;
+                return true;
+            });
+
+            if (filterType === 'completed') title = 'Obras Concluídas';
+            if (filterType === 'in-progress') title = 'Obras Em Andamento';
+            if (filterType === 'planned') title = 'Quero Ver / Ler';
+            if (filterType === 'abandoned') title = 'Obras Abandonadas';
+            if (filterType === 'favorites') title = 'Obras Favoritas';
+            if (filterType === 'all') title = 'Todo o Acervo';
+
+            titleText.textContent = `${title} (${filtered.length})`;
+
+            if (filtered.length === 0) {
+                resultsGrid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-blue-300/70">Nenhuma obra encontrada nesta categoria.</div>`;
+                return;
+            }
+
+            resultsGrid.innerHTML = filtered.map(item => {
+                const cover = item.cover || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600&auto=format&fit=crop';
+                return `
+                    <div onclick="window.openDetails('${item.id}')" class="glass-card rounded-2xl overflow-hidden border border-blue-500/20 hover:border-blue-400 transition-all duration-300 cursor-pointer flex flex-col group shadow-lg">
+                        <div class="relative aspect-[3/4] w-full overflow-hidden bg-blue-950">
+                            <img src="${cover}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            ${item.favorite ? '<div class="absolute top-2 right-2 w-7 h-7 bg-rose-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-md"><i class="fa-solid fa-heart text-xs"></i></div>' : ''}
+                        </div>
+                        <div class="p-2.5 flex flex-col flex-1 justify-between">
+                            <h4 class="text-xs font-bold text-white line-clamp-1">${item.title}</h4>
+                            <span class="text-[10px] text-blue-200/60 uppercase">${item.category}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         };
 
         window.closeFilterResults = () => {
             document.getElementById('filter-results-container').classList.add('hidden');
+            currentCardFilter = null;
         };
 
+        // --- ATUALIZAR ESTATÍSTICAS E BADGES ---
+        window.updateStatsAndBadges = () => {
+            const total = mediaItems.length;
+            const completed = mediaItems.filter(i => i.status === 'completed').length;
+            const inProgress = mediaItems.filter(i => i.status === 'in-progress').length;
+            const planned = mediaItems.filter(i => i.status === 'planned').length;
+            const abandoned = mediaItems.filter(i => i.status === 'abandoned').length;
+            const favorites = mediaItems.filter(i => i.favorite).length;
+
+            if(document.getElementById('stat-acervo')) document.getElementById('stat-acervo').textContent = total;
+            if(document.getElementById('stat-completed')) document.getElementById('stat-completed').textContent = completed;
+            if(document.getElementById('stat-in-progress')) document.getElementById('stat-in-progress').textContent = inProgress;
+            if(document.getElementById('stat-planned')) document.getElementById('stat-planned').textContent = planned;
+            if(document.getElementById('stat-abandoned')) document.getElementById('stat-abandoned').textContent = abandoned;
+            if(document.getElementById('stat-favorites')) document.getElementById('stat-favorites').textContent = favorites;
+
+            // Badges do menu lateral
+            if(document.getElementById('badge-all')) document.getElementById('badge-all').textContent = total;
+            if(document.getElementById('badge-favorites')) document.getElementById('badge-favorites').textContent = favorites;
+            
+            ['anime', 'short', 'dorama', 'movie', 'book', 'series'].forEach(cat => {
+                const count = mediaItems.filter(i => i.category === cat).length;
+                const badge = document.getElementById(`badge-${cat}`);
+                if(badge) badge.textContent = count;
+            });
+        };
+
+        // --- ABRIR DETALHES ---
+        window.openDetails = (id) => {
+            const item = mediaItems.find(i => i.id === id);
+            if (!item) return;
+
+            const content = document.getElementById('details-content');
+            const cover = item.cover || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600&auto=format&fit=crop';
+            
+            content.innerHTML = `
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <img src="${cover}" alt="${item.title}" class="w-32 h-44 object-cover rounded-xl shadow-md mx-auto sm:mx-0">
+                    <div class="space-y-2 flex-1">
+                        <h4 class="text-base font-bold text-white">${item.title}</h4>
+                        ${item.originalTitle ? `<p class="text-xs text-blue-300 italic">${item.originalTitle}</p>` : ''}
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <span class="px-2 py-0.5 bg-blue-600/30 border border-blue-500/30 text-blue-200 text-[10px] rounded-md uppercase">${item.category}</span>
+                            <span class="px-2 py-0.5 bg-blue-950 border border-blue-900 text-gray-300 text-[10px] rounded-md">${item.status}</span>
+                            ${item.favorite ? '<span class="px-2 py-0.5 bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[10px] rounded-md">Favorito</span>' : ''}
+                        </div>
+                        ${item.rating ? `<div class="text-xs text-amber-400 font-semibold pt-1">🌕 Nota: ${item.rating}/10</div>` : ''}
+                    </div>
+                </div>
+                ${item.synopsis ? `<div class="pt-2"><h5 class="text-xs font-bold text-blue-200 mb-1">Sinopse</h5><p class="text-xs text-gray-300 leading-relaxed">${item.synopsis}</p></div>` : ''}
+                ${item.review ? `<div class="pt-2"><h5 class="text-xs font-bold text-blue-200 mb-1">Resenha</h5><p class="text-xs text-gray-300 leading-relaxed">${item.review}</p></div>` : ''}
+                <div class="pt-4 border-t border-blue-900/40 flex justify-end space-x-2">
+                    <button onclick="window.editMedia('${item.id}')" class="px-3.5 py-1.5 bg-blue-600/40 hover:bg-blue-600/60 text-blue-200 text-xs font-semibold rounded-xl cursor-pointer">Editar</button>
+                    <button onclick="window.deleteMedia('${item.id}')" class="px-3.5 py-1.5 bg-rose-600/40 hover:bg-rose-600/60 text-rose-200 text-xs font-semibold rounded-xl cursor-pointer">Excluir</button>
+                </div>
+            `;
+            window.openDetailsModal();
+        };
+
+        // --- SALVAR / EDITAR OBRA NO FIRESTORE ---
         window.saveMedia = async (e) => {
             e.preventDefault();
-            // Lógica de salvamento Firestore
-            window.closeAddModal();
+            const editId = document.getElementById('form-edit-id').value;
+            const category = document.getElementById('form-category').value;
+            const status = document.getElementById('form-status').value;
+            const title = document.getElementById('form-title').value.trim();
+            const originalTitle = document.getElementById('form-original-title').value.trim();
+            const synopsis = document.getElementById('form-synopsis').value.trim();
+            const review = document.getElementById('form-review').value.trim();
+            const rating = parseFloat(document.getElementById('form-rating').value) || null;
+            const favorite = document.getElementById('modal-favorite-swipe').getAttribute('data-is-favorite') === 'true';
+            
+            let cover = document.getElementById('form-cover-url').value.trim();
+            if (tempCoverBase64) cover = tempCoverBase64;
+
+            const mediaData = {
+                category,
+                status,
+                title,
+                originalTitle,
+                synopsis,
+                review,
+                rating,
+                favorite,
+                cover,
+                genres: formTags.genre,
+                authors: formTags.author,
+                directors: formTags.director,
+                creators: formTags.creator,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                if (editId) {
+                    await updateDoc(doc(db, "mediaItems", editId), mediaData);
+                } else {
+                    mediaData.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, "mediaItems"), mediaData);
+                }
+                window.closeAddModal();
+                tempCoverBase64 = '';
+            } catch (error) {
+                console.error("Erro ao salvar obra:", error);
+                alert("Erro ao salvar. Verifique sua conexão.");
+            }
         };
 
-        // Escuta inicial do Firestore (Placeholder seguro)
-        console.log("Blue-Moon inicializado com sucesso.");
+        window.editMedia = (id) => {
+            window.closeDetailsModal();
+            const item = mediaItems.find(i => i.id === id);
+            if (!item) return;
+
+            window.openAddModal();
+            document.getElementById('modal-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Editar Obra';
+            document.getElementById('form-edit-id').value = item.id;
+            document.getElementById('form-category').value = item.category || 'anime';
+            window.toggleCategoryFields();
+
+            document.getElementById('form-status').value = item.status || 'completed';
+            document.getElementById('form-title').value = item.title || '';
+            document.getElementById('form-original-title').value = item.originalTitle || '';
+            document.getElementById('form-synopsis').value = item.synopsis || '';
+            document.getElementById('form-review').value = item.review || '';
+            document.getElementById('form-rating').value = item.rating || '';
+            window.updateFormRatingPreview(item.rating);
+            document.getElementById('form-cover-url').value = item.cover && !item.cover.startsWith('data:') ? item.cover : '';
+
+            window.setFavoriteSwipeState(item.favorite || false, false);
+
+            formTags.genre = item.genres || [];
+            formTags.author = item.authors || [];
+            formTags.director = item.directors || [];
+            formTags.creator = item.creators || [];
+            window.renderAllFormTags();
+        };
+
+        window.deleteMedia = async (id) => {
+            if (confirm("Tem certeza que deseja excluir esta obra do acervo?")) {
+                try {
+                    await deleteDoc(doc(db, "mediaItems", id));
+                    window.closeDetailsModal();
+                } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                }
+            }
+        };
+
+        // --- CONEXÃO EM TEMPO REAL COM O FIRESTORE (RESTABELECIDA) ---
+        onSnapshot(collection(db, "mediaItems"), (snapshot) => {
+            mediaItems = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            window.updateStatsAndBadges();
+            window.renderMediaGrid();
+            if (currentCardFilter) {
+                window.filterStoriesCard(currentCardFilter);
+            }
+        }, (error) => {
+            console.error("Erro ao carregar dados do Firestore:", error);
+        });
+
+        console.log("Blue-Moon conectado e sincronizado com sucesso.");
     </script>
-</body>
-</html>
