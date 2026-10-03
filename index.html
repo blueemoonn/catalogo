@@ -73,6 +73,7 @@
             color: #ffffff;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
             z-index: 10;
+            transition: transform 0.1s ease;
         }
         .favorite-swipe-text {
             width: 100%;
@@ -531,6 +532,430 @@
                     }
                 }
             });
+        }
+
+        // Variáveis e Acervo Global
+        let stories = [];
+        let currentCategory = 'all';
+        let currentFilterCard = null;
+        let formTags = { genre: [], author: [], director: [], creator: [] };
+
+        // Funções de UI vinculadas ao window para garantir funcionamento dos botões HTML
+        window.openSidebar = () => {
+            document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+        };
+
+        window.closeSidebar = () => {
+            document.getElementById('sidebar-drawer').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        };
+
+        window.switchCategory = (cat) => {
+            currentCategory = cat;
+            currentFilterCard = null;
+            document.getElementById('filter-results-container').classList.add('hidden');
+            window.closeSidebar();
+            renderMediaGrid();
+        };
+
+        window.openAddModal = () => {
+            document.getElementById('form-edit-id').value = '';
+            document.getElementById('media-form').reset();
+            formTags = { genre: [], author: [], director: [], creator: [] };
+            renderAllTags();
+            document.getElementById('modal-form-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Cadastrar Obra';
+            document.getElementById('modal-add-edit').classList.remove('hidden');
+            window.toggleCategoryFields();
+        };
+
+        window.closeAddModal = () => {
+            document.getElementById('modal-add-edit').classList.add('hidden');
+        };
+
+        window.openBannerModal = () => {
+            document.getElementById('modal-banner').classList.remove('hidden');
+        };
+
+        window.closeBannerModal = () => {
+            document.getElementById('modal-banner').classList.add('hidden');
+        };
+
+        window.previewBannerFileName = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('banner-file-name').textContent = file.name;
+            }
+        };
+
+        window.saveBannerImageFile = () => {
+            const fileInput = document.getElementById('form-banner-file');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.documentElement.style.setProperty('--banner-bg', `url('${evt.target.result}')`);
+                    localStorage.setItem('blue_moon_banner', evt.target.result);
+                    window.closeBannerModal();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        };
+
+        window.handleCoverFile = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('cover-file-label').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('form-cover-url').value = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.toggleCategoryFields = () => {
+            const cat = document.getElementById('form-category').value;
+            const authorWrapper = document.getElementById('field-author');
+            const directorWrapper = document.getElementById('field-director');
+            const creatorWrapper = document.getElementById('field-creator');
+            const seasonsEpsWrapper = document.getElementById('field-seasons-eps');
+            const ovasWrapper = document.getElementById('field-ovas-wrapper');
+            const bookWrapper = document.getElementById('field-book-type-wrapper');
+            const durationLabel = document.getElementById('form-duration-label');
+            const durationUnit = document.getElementById('form-duration-unit');
+            const plannedLabel = document.getElementById('stat-planned-label');
+
+            [authorWrapper, directorWrapper, creatorWrapper, seasonsEpsWrapper, ovasWrapper, bookWrapper].forEach(el => el.classList.add('hidden'));
+
+            if (cat === 'anime') {
+                authorWrapper.classList.remove('hidden');
+                creatorWrapper.classList.remove('hidden');
+                seasonsEpsWrapper.classList.remove('hidden');
+                ovasWrapper.classList.remove('hidden');
+                durationLabel.textContent = 'Duração Média por Episódio';
+                durationUnit.textContent = 'min';
+                plannedLabel.textContent = 'Quero Ver';
+            } else if (cat === 'short') {
+                directorWrapper.classList.remove('hidden');
+                durationLabel.textContent = 'Duração Total';
+                durationUnit.textContent = 'min';
+                plannedLabel.textContent = 'Quero Ver';
+            } else if (cat === 'dorama') {
+                directorWrapper.classList.remove('hidden');
+                creatorWrapper.classList.remove('hidden');
+                seasonsEpsWrapper.classList.remove('hidden');
+                durationLabel.textContent = 'Duração Média por Episódio';
+                durationUnit.textContent = 'min';
+                plannedLabel.textContent = 'Quero Ver';
+            } else if (cat === 'movie') {
+                directorWrapper.classList.remove('hidden');
+                durationLabel.textContent = 'Duração';
+                durationUnit.textContent = 'min';
+                plannedLabel.textContent = 'Quero Ver';
+            } else if (cat === 'book') {
+                authorWrapper.classList.remove('hidden');
+                bookWrapper.classList.remove('hidden');
+                durationLabel.textContent = 'Número de Páginas';
+                durationUnit.textContent = 'pág';
+                plannedLabel.textContent = 'Quero Ler';
+                window.toggleBookTypeFields();
+            } else if (cat === 'series') {
+                creatorWrapper.classList.remove('hidden');
+                seasonsEpsWrapper.classList.remove('hidden');
+                durationLabel.textContent = 'Duração Média por Episódio';
+                durationUnit.textContent = 'min';
+                plannedLabel.textContent = 'Quero Ver';
+            }
+        };
+
+        window.toggleBookTypeFields = () => {
+            const bookType = document.getElementById('form-book-type').value;
+            const seriesDetails = document.getElementById('field-book-series-details');
+            if (bookType === 'series') {
+                seriesDetails.classList.remove('hidden');
+            } else {
+                seriesDetails.classList.add('hidden');
+            }
+        };
+
+        window.addFormTag = (type, inputId) => {
+            const input = document.getElementById(inputId);
+            const val = input.value.trim();
+            if (val && !formTags[type].includes(val)) {
+                formTags[type].push(val);
+                input.value = '';
+                renderAllTags();
+            }
+        };
+
+        window.removeFormTag = (type, val) => {
+            formTags[type] = formTags[type].filter(item => item !== val);
+            renderAllTags();
+        };
+
+        function renderAllTags() {
+            ['genre', 'author', 'director', 'creator'].forEach(type => {
+                const container = document.getElementById(`${type}-tags-list`);
+                if (container) {
+                    container.innerHTML = formTags[type].map(tag => `
+                        <span class="inline-flex items-center space-x-1 bg-blue-600/30 border border-blue-500/40 text-blue-200 text-xs px-2.5 py-1 rounded-lg">
+                            <span>${tag}</span>
+                            <button type="button" onclick="window.removeFormTag('${type}', '${tag}')" class="text-blue-300 hover:text-white ml-1">&times;</button>
+                        </span>
+                    `).join('');
+                }
+            });
+        }
+
+        window.updateFormRatingPreview = (val) => {
+            const starSpan = document.getElementById('form-rating-star');
+            const valSpan = document.getElementById('form-rating-val');
+            if (val) {
+                starSpan.classList.remove('hidden');
+                valSpan.textContent = val;
+            } else {
+                starSpan.classList.add('hidden');
+            }
+        };
+
+        window.saveMedia = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('form-edit-id').value;
+            const data = {
+                coverUrl: document.getElementById('form-cover-url').value,
+                category: document.getElementById('form-category').value,
+                status: document.getElementById('form-status').value,
+                title: document.getElementById('form-title').value,
+                originalTitle: document.getElementById('form-original-title').value,
+                synopsis: document.getElementById('form-synopsis').value,
+                genres: [...formTags.genre],
+                duration: document.getElementById('form-duration').value,
+                authors: [...formTags.author],
+                directors: [...formTags.director],
+                creators: [...formTags.creator],
+                season: document.getElementById('form-season').value,
+                episodes: document.getElementById('form-episodes').value,
+                ovas: document.getElementById('form-ovas').value,
+                bookType: document.getElementById('form-book-type').value,
+                sagaName: document.getElementById('form-saga-name').value,
+                sagaNumber: document.getElementById('form-saga-number').value,
+                releaseDate: document.getElementById('form-release-date').value,
+                watchDate: document.getElementById('form-watch-date').value,
+                rating: document.getElementById('form-rating').value,
+                isFavorite: document.getElementById('modal-favorite-swipe').dataset.isFavorite === 'true',
+                review: document.getElementById('form-review').value,
+                userId: auth.currentUser ? auth.currentUser.uid : 'local'
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, "stories", id), data);
+                } else {
+                    await addDoc(collection(db, "stories"), data);
+                }
+                window.closeAddModal();
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
+            }
+        };
+
+        window.filterStoriesCard = (cardType) => {
+            currentFilterCard = cardType;
+            const container = document.getElementById('filter-results-container');
+            const titleText = document.getElementById('filter-title-text');
+            const grid = document.getElementById('filter-results-grid');
+
+            container.classList.remove('hidden');
+            let filtered = [];
+
+            if (cardType === 'all') {
+                titleText.textContent = 'Todo o Acervo';
+                filtered = stories;
+            } else if (cardType === 'completed') {
+                titleText.textContent = 'Obras Concluídas';
+                filtered = stories.filter(s => s.status === 'completed');
+            } else if (cardType === 'in-progress') {
+                titleText.textContent = 'Obras Em Andamento';
+                filtered = stories.filter(s => s.status === 'in-progress');
+            } else if (cardType === 'planned') {
+                titleText.textContent = 'Quero Ver / Ler';
+                filtered = stories.filter(s => s.status === 'planned');
+            } else if (cardType === 'abandoned') {
+                titleText.textContent = 'Obras Abandonadas';
+                filtered = stories.filter(s => s.status === 'abandoned');
+            } else if (cardType === 'favorites') {
+                titleText.textContent = 'Obras Favoritas';
+                filtered = stories.filter(s => s.isFavorite);
+            }
+
+            grid.innerHTML = filtered.length ? filtered.map(item => renderCardHTML(item)).join('') : `<p class="col-span-full text-center text-xs text-blue-300 py-6">Nenhum item encontrado nesta categoria.</p>`;
+        };
+
+        window.closeFilterResults = () => {
+            document.getElementById('filter-results-container').classList.add('hidden');
+            currentFilterCard = null;
+        };
+
+        function renderCardHTML(item) {
+            return `
+                <div onclick="window.openDetailsModal('${item.id}')" class="glass-card rounded-2xl overflow-hidden group cursor-pointer hover:border-blue-400 transition transform hover:-translate-y-1 shadow-lg relative flex flex-col">
+                    <div class="aspect-[3/4] bg-[#0e1738] relative overflow-hidden">
+                        <img src="${item.coverUrl || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400&auto=format&fit=crop'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        ${item.isFavorite ? '<span class="absolute top-2 right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-heart"></i></span>' : ''}
+                    </div>
+                    <div class="p-3 flex flex-col flex-1 justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-white truncate">${item.title}</h4>
+                            <p class="text-[10px] text-blue-300/80 uppercase mt-0.5">${item.category}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.openDetailsModal = (id) => {
+            const item = stories.find(s => s.id === id);
+            if (!item) return;
+
+            const content = document.getElementById('details-content');
+            content.innerHTML = `
+                <div class="flex space-x-4">
+                    <img src="${item.coverUrl || ''}" class="w-28 h-40 object-cover rounded-xl border border-blue-500/30">
+                    <div class="space-y-1 flex-1">
+                        <h4 class="text-base font-bold text-white">${item.title}</h4>
+                        ${item.originalTitle ? `<p class="text-xs text-blue-300 italic">${item.originalTitle}</p>` : ''}
+                        <p class="text-xs text-gray-300"><strong>Status:</strong> ${item.status}</p>
+                        <p class="text-xs text-gray-300"><strong>Categoria:</strong> ${item.category}</p>
+                        ${item.rating ? `<p class="text-xs text-amber-400"><strong>Nota:</strong> 🌕 ${item.rating}</p>` : ''}
+                    </div>
+                </div>
+                ${item.synopsis ? `<div><h5 class="text-xs font-semibold text-blue-200 mb-1">Sinopse</h5><p class="text-xs text-gray-300 bg-blue-950/40 p-3 rounded-xl">${item.synopsis}</p></div>` : ''}
+                ${item.review ? `<div><h5 class="text-xs font-semibold text-blue-200 mb-1">Resenha</h5><p class="text-xs text-gray-300 bg-blue-950/40 p-3 rounded-xl">${item.review}</p></div>` : ''}
+                <div class="flex justify-end space-x-2 pt-2 border-t border-blue-900/40">
+                    <button onclick="window.deleteMedia('${item.id}')" class="px-3 py-1.5 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 text-xs font-semibold rounded-xl cursor-pointer">Excluir</button>
+                    <button onclick="window.closeDetailsModal()" class="px-3 py-1.5 bg-blue-950/60 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer">Fechar</button>
+                </div>
+            `;
+            document.getElementById('modal-details').classList.remove('hidden');
+        };
+
+        window.closeDetailsModal = () => {
+            document.getElementById('modal-details').classList.add('hidden');
+        };
+
+        window.deleteMedia = async (id) => {
+            if (confirm("Tem certeza que deseja excluir esta obra?")) {
+                await deleteDoc(doc(db, "stories", id));
+                window.closeDetailsModal();
+            }
+        };
+
+        function renderMediaGrid() {
+            const grid = document.getElementById('media-grid');
+            const emptyState = document.getElementById('empty-state');
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+
+            let list = stories;
+            if (currentCategory === 'favorites') {
+                list = list.filter(s => s.isFavorite);
+            } else if (currentCategory !== 'all') {
+                list = list.filter(s => s.category === currentCategory);
+            }
+
+            if (searchVal) {
+                list = list.filter(s => s.title.toLowerCase().includes(searchVal));
+            }
+
+            // Atualizar distintivos do menu
+            document.getElementById('badge-all').textContent = stories.length;
+            document.getElementById('badge-favorites').textContent = stories.filter(s => s.isFavorite).length;
+            ['anime', 'short', 'dorama', 'movie', 'book', 'series'].forEach(cat => {
+                const el = document.getElementById(`badge-${cat}`);
+                if(el) el.textContent = stories.filter(s => s.category === cat).length;
+            });
+
+            // Atualizar contadores dos cards estatísticos
+            document.getElementById('stat-acervo').textContent = stories.length;
+            document.getElementById('stat-completed').textContent = stories.filter(s => s.status === 'completed').length;
+            document.getElementById('stat-in-progress').textContent = stories.filter(s => s.status === 'in-progress').length;
+            document.getElementById('stat-planned').textContent = stories.filter(s => s.status === 'planned').length;
+            document.getElementById('stat-abandoned').textContent = stories.filter(s => s.status === 'abandoned').length;
+            document.getElementById('stat-favorites').textContent = stories.filter(s => s.isFavorite).length;
+
+            if (list.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.innerHTML = list.map(item => renderCardHTML(item)).join('');
+            }
+        }
+        window.renderMediaGrid = renderMediaGrid;
+
+        // Configuração do Swipe de Favorito no Modal
+        const swipeTrack = document.getElementById('modal-favorite-swipe');
+        const swipeThumb = swipeTrack.querySelector('.favorite-swipe-thumb');
+        const swipeLabel = document.getElementById('favorite-swipe-label');
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+
+        function setFavoriteState(isFav) {
+            swipeTrack.dataset.isFavorite = isFav;
+            if (isFav) {
+                swipeTrack.classList.add('active-fav');
+                swipeThumb.style.transform = `translateX(${swipeTrack.clientWidth - swipeThumb.clientWidth - 8}px)`;
+                swipeThumb.style.background = '#ef4444';
+                swipeLabel.textContent = 'Favorito Ativado';
+            } else {
+                swipeTrack.classList.remove('active-fav');
+                swipeThumb.style.transform = `translateX(0px)`;
+                swipeThumb.style.background = '#2563eb';
+                swipeLabel.textContent = 'Deslize para Favoritar';
+            }
+        }
+
+        swipeTrack.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            startX = e.clientX - currentX;
+            swipeTrack.setPointerCapture(e.pointerId);
+        });
+
+        swipeTrack.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const maxTranslate = swipeTrack.clientWidth - swipeThumb.clientWidth - 8;
+            currentX = Math.max(0, Math.min(e.clientX - startX, maxTranslate));
+            swipeThumb.style.transform = `translateX(${currentX}px)`;
+        });
+
+        swipeTrack.addEventListener('pointerup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const maxTranslate = swipeTrack.clientWidth - swipeThumb.clientWidth - 8;
+            const isFav = swipeTrack.dataset.isFavorite === 'true';
+            if (currentX > maxTranslate / 2) {
+                setFavoriteState(true);
+            } else {
+                setFavoriteState(false);
+            }
+        });
+
+        // Firebase Realtime Listener
+        onSnapshot(collection(db, "stories"), (snapshot) => {
+            stories = [];
+            snapshot.forEach((docSnap) => {
+                stories.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            renderMediaGrid();
+            if (currentFilterCard) {
+                window.filterStoriesCard(currentFilterCard);
+            }
+        });
+
+        // Carregar Banner Salvo no LocalStorage
+        const savedBanner = localStorage.getItem('blue_moon_banner');
+        if (savedBanner) {
+            document.documentElement.style.setProperty('--banner-bg', `url('${savedBanner}')`);
         }
     </script>
 </body>
