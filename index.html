@@ -1,487 +1,6 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b1329">
-    <link rel="manifest" href="./manifest.json">
-    <title>Blue-Moon | Sanctuary of Stories</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b1329; color: #f3f4f6; }
-        .hero-font { font-family: 'Cinzel', serif; letter-spacing: 0.15em; }
-        .gabriola-title { 
-            font-family: 'Comic Sans MS', 'Comic Sans', cursive; 
-            padding: 0 0.2em; 
-            display: inline-block;
-            font-weight: bold;
-        }
-        .hero-banner { 
-            background-image: linear-gradient(to bottom, rgba(11, 19, 41, 0.4), rgba(11, 19, 41, 0.92)), var(--banner-bg, url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop')); 
-            background-size: cover; 
-            background-position: center; 
-        }
-        .glass-card { background: rgba(19, 31, 61, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(59, 130, 246, 0.2); }
-        .blue-silver-text {
-            background: linear-gradient(135deg, #ffffff 0%, #3b82f6 35%, #60a5fa 50%, #3b82f6 65%, #ffffff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 35px rgba(59, 130, 246, 0.5);
-        }
-        .silver-subtext {
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 0.3em;
-        }
-        .modal-animate-in { animation: modalFadeIn 0.2s ease-out forwards; }
-        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-        /* Estilos do Swipe de Coração ("Favoritei") Super Fluido e Funcional */
-        .favorite-swipe-track {
-            position: relative;
-            width: 100%;
-            height: 44px;
-            background: rgba(14, 23, 56, 0.8);
-            border-radius: 9999px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            padding: 4px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            cursor: pointer;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: none;
-        }
-        .favorite-swipe-track.active-fav {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.4);
-        }
-        .favorite-swipe-thumb {
-            position: absolute;
-            left: 4px;
-            width: 36px;
-            height: 36px;
-            background: #2563eb;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-        }
-        .favorite-swipe-text {
-            width: 100%;
-            text-align: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #93c5fd;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            pointer-events: none;
-            transition: color 0.3s ease;
-        }
-        .favorite-swipe-track.active-fav .favorite-swipe-text {
-            color: #fca5a5;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col relative overflow-x-hidden pt-10">
-
-    <!-- BARRA SUPERIOR DE AUTENTICAÇÃO -->
-    <div id="auth-bar" class="fixed top-0 left-0 right-0 h-10 bg-[#0b1329]/95 backdrop-blur-md border-b border-blue-900/40 z-[1001] flex items-center justify-end px-4 space-x-3 text-xs">
-        <span id="userInfo" style="display:none;" class="text-blue-200 font-medium"></span>
-        <button id="loginBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-lg font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-md">
-            <i class="fa-solid fa-user-circle"></i>
-            <span id="loginBtnText">Entrar com Google</span>
-        </button>
-    </div>
-
-    <div id="sidebar-backdrop" onclick="window.closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998] hidden"></div>
-
-    <!-- MENU LATERAL FLUTUANTE -->
-    <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
-        <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-moon text-blue-400 text-2xl"></i>
-                <h1 class="font-bold text-lg text-white">Blue-Moon</h1>
-            </div>
-            <button onclick="window.closeSidebar()" class="p-2 text-gray-400 hover:text-white rounded-lg cursor-pointer">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-        </div>
-
-        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
-            <div class="text-xs font-semibold text-blue-300/70 uppercase tracking-wider px-3 mb-2">Navegação</div>
-            <button onclick="window.switchCategory('all')" id="nav-all" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-house w-5 text-center text-blue-400"></i><span>Início</span></div>
-                <span id="badge-all" class="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-semibold">0</span>
-            </button>
-            <button onclick="window.switchCategory('favorites')" id="nav-favorites" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-heart w-5 text-center text-rose-400"></i><span>Favoritos</span></div>
-                <span id="badge-favorites" class="text-xs bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-semibold">0</span>
-            </button>
-
-            <div class="text-xs font-semibold text-blue-300/70 uppercase tracking-wider px-3 mt-6 mb-2">Categorias</div>
-            <button onclick="window.switchCategory('anime')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-wand-magic-sparkles w-5 text-center text-blue-400"></i><span>Animes</span></div>
-                <span id="badge-anime" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
-            </button>
-            <button onclick="window.switchCategory('short')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-film w-5 text-center text-amber-400"></i><span>Curtas</span></div>
-                <span id="badge-short" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
-            </button>
-            <button onclick="window.switchCategory('dorama')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-tv w-5 text-center text-blue-400"></i><span>Dramas</span></div>
-                <span id="badge-dorama" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
-            </button>
-            <button onclick="window.switchCategory('movie')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-clapperboard w-5 text-center text-red-400"></i><span>Filmes</span></div>
-                <span id="badge-movie" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
-            </button>
-            <button onclick="window.switchCategory('book')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-book w-5 text-center text-emerald-400"></i><span>Livros</span></div>
-                <span id="badge-book" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
-            </button>
-            <button onclick="window.switchCategory('series')" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-gray-200 hover:bg-blue-950/50 cursor-pointer">
-                <div class="flex items-center space-x-3"><i class="fa-solid fa-video w-5 text-center text-cyan-400"></i><span>Séries</span></div>
-                <span id="badge-series" class="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded-full">0</span>
-            </button>
-        </nav>
-    </aside>
-
-    <div class="flex-1 flex flex-col min-w-0">
-        <header id="hero-header" class="hero-banner relative transition-all duration-500 py-20 sm:py-24 px-4 sm:px-6 lg:px-8 border-b border-white/10 mt-6">
-            <button onclick="window.openSidebar()" class="absolute top-4 left-4 bg-[#131f3d]/70 hover:bg-[#131f3d] text-gray-200 hover:text-white px-3.5 py-2 rounded-xl border border-blue-500/25 text-xs font-medium flex items-center space-x-2 backdrop-blur-md cursor-pointer transition shadow-lg z-10">
-                <i class="fa-solid fa-bars text-sm"></i><span class="font-semibold tracking-wider">MENU</span>
-            </button>
-
-            <button onclick="window.openBannerModal()" class="absolute top-4 right-4 bg-[#131f3d]/70 hover:bg-[#131f3d] text-gray-200 hover:text-white px-3 py-1.5 rounded-xl border border-blue-500/25 text-xs font-medium flex items-center space-x-1.5 backdrop-blur-md cursor-pointer transition z-10">
-                <i class="fa-solid fa-image"></i><span>Mudar Fundo</span>
-            </button>
-
-            <div class="max-w-5xl mx-auto flex flex-col items-center text-center space-y-4 pt-4">
-                <div class="space-y-3 pt-6">
-                    <h2 class="text-6xl sm:text-8xl md:text-9xl gabriola-title blue-silver-text tracking-normal">Blue-Moon</h2>
-                    <div class="flex items-center justify-center space-x-3 pt-2">
-                        <span class="h-[1px] w-12 bg-gradient-to-r from-transparent to-blue-400/60"></span>
-                        <p class="text-xs sm:text-sm font-medium silver-subtext uppercase">SANCTUARY OF STORIES</p>
-                        <span class="h-[1px] w-12 bg-gradient-to-l from-transparent to-blue-400/60"></span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            <section class="flex justify-center">
-                <button onclick="window.openAddModal()" class="w-full sm:w-80 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold rounded-2xl border border-blue-400/40 shadow-xl flex items-center justify-center space-x-2.5 active:scale-95 cursor-pointer transition">
-                    <i class="fa-solid fa-plus text-sm"></i>
-                    <span class="text-xs font-bold tracking-widest uppercase">ADICIONAR</span>
-                </button>
-            </section>
-
-            <!-- Cards de Estatísticas Funcionais -->
-            <section id="stats-section">
-                <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
-                    <div onclick="window.filterStoriesCard('all')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between shadow-xl cursor-pointer hover:border-blue-400 transition-all">
-                        <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Total</p><h3 class="text-2xl font-extrabold text-white mt-0.5" id="stat-acervo">0</h3></div>
-                        <div class="w-9 h-9 bg-blue-500/20 border border-blue-500/30 rounded-xl flex items-center justify-center text-blue-300"><i class="fa-solid fa-layer-group text-sm"></i></div>
-                    </div>
-                    <div onclick="window.filterStoriesCard('completed')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-emerald-400 transition-all">
-                        <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Concluídos</p><h3 class="text-2xl font-bold text-emerald-400 mt-0.5" id="stat-completed">0</h3></div>
-                        <div class="w-9 h-9 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400"><i class="fa-solid fa-circle-check text-sm"></i></div>
-                    </div>
-                    <div onclick="window.filterStoriesCard('in-progress')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-amber-400 transition-all">
-                        <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Em Andamento</p><h3 class="text-2xl font-bold text-amber-400 mt-0.5" id="stat-in-progress">0</h3></div>
-                        <div class="w-9 h-9 bg-amber-500/20 border border-amber-500/30 rounded-xl flex items-center justify-center text-amber-400"><i class="fa-solid fa-spinner text-sm"></i></div>
-                    </div>
-                    <div onclick="window.filterStoriesCard('planned')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-sky-400 transition-all">
-                        <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase" id="stat-planned-label">Quero Ver/Ler</p><h3 class="text-2xl font-bold text-sky-400 mt-0.5" id="stat-planned">0</h3></div>
-                        <div class="w-9 h-9 bg-sky-500/20 border border-sky-500/30 rounded-xl flex items-center justify-center text-sky-400"><i class="fa-solid fa-bookmark text-sm"></i></div>
-                    </div>
-                    <div onclick="window.filterStoriesCard('abandoned')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-rose-400 transition-all">
-                        <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Abandonados</p><h3 class="text-2xl font-bold text-rose-400 mt-0.5" id="stat-abandoned">0</h3></div>
-                        <div class="w-9 h-9 bg-rose-500/20 border border-rose-500/30 rounded-xl flex items-center justify-center text-rose-400"><i class="fa-solid fa-ban text-sm"></i></div>
-                    </div>
-                    <div onclick="window.filterStoriesCard('favorites')" class="glass-card p-3.5 rounded-2xl flex items-center justify-between cursor-pointer hover:border-rose-400 transition-all">
-                        <div><p class="text-[11px] font-semibold text-blue-300/80 uppercase">Favoritos</p><h3 class="text-2xl font-bold text-rose-400 mt-0.5" id="stat-favorites">0</h3></div>
-                        <div class="w-9 h-9 bg-rose-500/20 border border-rose-500/30 rounded-xl flex items-center justify-center text-rose-400"><i class="fa-solid fa-heart text-sm"></i></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Área Expansível / Container de Resultados do Filtro por Card -->
-            <div id="filter-results-container" class="hidden glass-card p-6 rounded-2xl border border-blue-500/40 shadow-2xl transition-all duration-300 space-y-4">
-                <div class="flex items-center justify-between border-b border-blue-900/40 pb-3">
-                    <h3 id="filter-results-title" class="text-base font-bold text-white flex items-center space-x-2">
-                        <i class="fa-solid fa-filter text-blue-400"></i>
-                        <span id="filter-title-text">Filtrado</span>
-                    </h3>
-                    <button type="button" onclick="window.closeFilterResults()" class="text-gray-300 hover:text-white cursor-pointer px-2.5 py-1 bg-blue-950/60 rounded-lg text-xs">Fechar ✕</button>
-                </div>
-                <div id="filter-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <!-- Itens filtrados serão injetados aqui dinamicamente -->
-                </div>
-            </div>
-
-            <section class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between">
-                <div class="relative w-full sm:w-1/2">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-300 text-sm"></i>
-                    <input type="text" id="search-input" oninput="window.renderMediaGrid()" placeholder="Buscar por título..." class="w-full bg-[#0e1738] border border-blue-900/50 text-gray-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-blue-400">
-                </div>
-            </section>
-
-            <section id="media-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></section>
-
-            <div id="empty-state" class="glass-card p-12 rounded-2xl text-center space-y-2">
-                <i class="fa-solid fa-box-open text-3xl text-blue-400/60"></i>
-                <h4 class="text-base font-bold text-gray-200">Nenhuma obra cadastrada</h4>
-                <p class="text-xs text-blue-200/70">Toque em "ADICIONAR" para inserir uma nova obra no acervo.</p>
-            </div>
-        </main>
-    </div>
-
-    <!-- MODAL DE FUNDO -->
-    <div id="modal-banner" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-3">
-        <div class="glass-card w-full max-w-md rounded-2xl border border-blue-500/30 shadow-2xl modal-animate-in p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-blue-900/40 pb-3">
-                <h3 class="text-base font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-image text-blue-400"></i><span>Alterar Fundo</span></h3>
-                <button type="button" onclick="window.closeBannerModal()" class="text-gray-300 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <label class="flex flex-col items-center justify-center border-2 border-dashed border-blue-500/40 hover:border-blue-400 bg-[#0e1738]/50 rounded-xl p-5 cursor-pointer text-center">
-                <i class="fa-solid fa-cloud-arrow-up text-2xl text-blue-400 mb-2"></i>
-                <span id="banner-file-name" class="text-xs text-gray-300 font-medium">Escolher arquivo</span>
-                <input type="file" id="form-banner-file" accept="image/*" class="hidden" onchange="window.previewBannerFileName(event)">
-            </label>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button type="button" onclick="window.closeBannerModal()" class="px-4 py-2 bg-blue-950/60 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer">Cancelar</button>
-                <button type="button" onclick="window.saveBannerImageFile()" class="px-4 py-2 bg-[#2563eb] text-white text-xs font-semibold rounded-xl cursor-pointer">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL FORMULÁRIO -->
-    <div id="modal-add-edit" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-3 overflow-y-auto">
-        <div class="glass-card w-full max-w-2xl rounded-2xl border border-blue-500/30 shadow-2xl modal-animate-in max-h-[92vh] flex flex-col overflow-hidden my-auto">
-            <div class="px-5 py-4 border-b border-blue-900/40 flex items-center justify-between bg-[#0e1738]/60">
-                <h3 id="modal-form-title" class="text-base font-bold text-white"><i class="fa-solid fa-pen-to-square text-blue-400 mr-2"></i>Cadastrar Obra</h3>
-                <button type="button" onclick="window.closeAddModal()" class="text-gray-300 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form id="media-form" onsubmit="window.saveMedia(event)" class="p-5 overflow-y-auto space-y-4 flex-1">
-                <input type="hidden" id="form-edit-id" value="">
-                <!-- Capa -->
-                <div class="space-y-2">
-                    <label class="block text-xs font-semibold text-blue-200">Capa da Obra (URL ou Enviar Ficheiro)</label>
-                    <input type="url" id="form-cover-url" placeholder="https://..." class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200 mb-1">
-                    <label class="flex items-center justify-between border border-dashed border-blue-500/40 bg-[#0e1738]/40 rounded-xl px-3 py-2 cursor-pointer hover:border-blue-400">
-                        <span id="cover-file-label" class="text-xs text-blue-300">Carregar foto do PC/Telemóvel...</span>
-                        <input type="file" id="form-cover-file" accept="image/*" class="hidden" onchange="window.handleCoverFile(event)">
-                    </label>
-                </div>
-
-                <!-- Categoria & Status -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Categoria *</label>
-                        <select id="form-category" required onchange="window.toggleCategoryFields()" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                            <option value="anime">Anime</option>
-                            <option value="short">Curta</option>
-                            <option value="dorama">Drama</option>
-                            <option value="movie">Filme</option>
-                            <option value="book">Livro</option>
-                            <option value="series">Série</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Status</label>
-                        <select id="form-status" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                            <option value="completed">Concluído</option>
-                            <option value="in-progress">Em Andamento</option>
-                            <option value="planned" id="option-planned">Quero Ver/Ler</option>
-                            <option value="abandoned">Abandonado</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Título -->
-                <div>
-                    <label class="block text-xs font-semibold text-blue-200 mb-1">Título *</label>
-                    <input type="text" id="form-title" required class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                </div>
-
-                <!-- Título Original -->
-                <div>
-                    <label class="block text-xs font-semibold text-blue-200 mb-1">Título Original</label>
-                    <input type="text" id="form-original-title" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                </div>
-
-                <!-- Bloco Específico para Livros -->
-                <div id="field-book-type-wrapper" class="hidden space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Tipo de Publicação</label>
-                        <select id="form-book-type" onchange="window.toggleBookTypeFields()" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                            <option value="standalone">Volume Único</option>
-                            <option value="series">Série / Saga</option>
-                        </select>
-                    </div>
-                    <div id="field-book-series-details" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">Nome da Série / Saga</label>
-                            <input type="text" id="form-saga-name" placeholder="Ex: Trilogia Aço" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">Número do Livro</label>
-                            <input type="text" id="form-saga-number" placeholder="Ex: 1 ou 1.5" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sinopse -->
-                <div>
-                    <label class="block text-xs font-semibold text-blue-200 mb-1">Sinopse</label>
-                    <textarea id="form-synopsis" rows="2" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
-                </div>
-
-                <!-- Gênero e Duração/Páginas -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Gênero</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-genre-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Ex: Ação" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('genre','input-genre-temp');}">
-                            <button type="button" onclick="window.addFormTag('genre','input-genre-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="genre-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-                    
-                    <div>
-                        <label id="form-duration-label" class="block text-xs font-semibold text-blue-200 mb-1">Duração</label>
-                        <div class="relative">
-                            <input type="number" id="form-duration" min="0" placeholder="Ex: 120" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 pr-14 text-gray-200">
-                            <span id="form-duration-unit" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-400 font-medium">min</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Campos Dinâmicos -->
-                <div id="dynamic-fields-container" class="space-y-3 p-3.5 rounded-xl bg-blue-950/30 border border-blue-900/40">
-                    <div id="field-author" class="hidden space-y-2">
-                        <label class="block text-xs font-semibold text-blue-200">Autor</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-author-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Nome do autor" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('author','input-author-temp');}">
-                            <button type="button" onclick="window.addFormTag('author','input-author-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="author-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-
-                    <div id="field-director" class="hidden space-y-2">
-                        <label class="block text-xs font-semibold text-blue-200">Diretor</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-director-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Nome do diretor" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('director','input-director-temp');}">
-                            <button type="button" onclick="window.addFormTag('director','input-director-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="director-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-
-                    <div id="field-creator" class="hidden space-y-2">
-                        <label class="block text-xs font-semibold text-blue-200">Criador</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="input-creator-temp" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200" placeholder="Nome do criador" onkeydown="if(event.key==='Enter'){event.preventDefault();window.addFormTag('creator','input-creator-temp');}">
-                            <button type="button" onclick="window.addFormTag('creator','input-creator-temp')" class="shrink-0 text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-3 py-2.5 rounded-xl border border-blue-500/30 cursor-pointer flex items-center space-x-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i><span>Adicionar</span>
-                            </button>
-                        </div>
-                        <div id="creator-tags-list" class="flex flex-wrap gap-1.5 mt-2"></div>
-                    </div>
-
-                    <div id="field-seasons-eps" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">Temporada</label>
-                            <input type="number" id="form-season" min="1" value="1" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">Nº de Episódios</label>
-                            <input type="number" id="form-episodes" min="0" value="0" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                        <div id="field-ovas-wrapper" class="hidden">
-                            <label class="block text-xs font-semibold text-blue-200 mb-1">OVAs</label>
-                            <input type="number" id="form-ovas" min="0" value="0" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Datas -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Data de Lançamento</label>
-                        <input type="date" id="form-release-date" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Data de Visualização</label>
-                        <input type="date" id="form-watch-date" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                    </div>
-                </div>
-
-                <!-- Nota & Swipe "Favoritei" -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Nota</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="number" id="form-rating" min="0" max="10" step="0.5" placeholder="8.5" oninput="window.updateFormRatingPreview(this.value)" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl px-3 py-2 text-gray-200">
-                            <span id="form-rating-star" class="text-blue-300 font-semibold text-sm hidden flex items-center space-x-1 shrink-0">
-                                <span>🌕</span><span id="form-rating-val"></span>
-                            </span>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-blue-200 mb-1">Favorito (Deslize)</label>
-                        <!-- Componente Swipe Funcional -->
-                        <div id="modal-favorite-swipe" class="favorite-swipe-track" data-is-favorite="false">
-                            <div class="favorite-swipe-text" id="favorite-swipe-label">Deslize para Favoritar</div>
-                            <div class="favorite-swipe-thumb">
-                                <i class="fa-solid fa-heart text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resenha -->
-                <div>
-                    <label class="block text-xs font-semibold text-blue-200 mb-1">Resenha / Opinião</label>
-                    <textarea id="form-review" rows="3" placeholder="O que achou da obra?" class="w-full bg-[#0e1738] border border-blue-900/60 text-sm rounded-xl p-3 text-gray-200"></textarea>
-                </div>
-
-                <div class="pt-3 border-t border-blue-900/40 flex justify-end space-x-2">
-                    <button type="button" onclick="window.closeAddModal()" class="px-4 py-2 bg-blue-950/60 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer">Cancelar</button>
-                    <button type="submit" id="form-submit-btn" class="px-4 py-2 bg-[#2563eb] text-white text-xs font-semibold rounded-xl cursor-pointer">Salvar Obra</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL DETALHES -->
-    <div id="modal-details" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-3 overflow-y-auto">
-        <div class="glass-card w-full max-w-lg rounded-2xl border border-blue-500/30 shadow-2xl modal-animate-in max-h-[90vh] flex flex-col overflow-hidden my-auto">
-            <div class="px-5 py-4 border-b border-blue-900/40 flex items-center justify-between bg-[#0e1738]/60">
-                <h3 class="text-base font-bold text-white">Detalhes da Obra</h3>
-                <button type="button" onclick="window.closeDetailsModal()" class="text-gray-300 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div id="details-content" class="p-5 overflow-y-auto space-y-4 flex-1"></div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -533,6 +52,7 @@
 
         let mediaItems = [];
         let currentCategory = 'all';
+        let currentCardFilter = null; // Filtro dos cards de estatísticas (completed, in-progress, planned, abandoned, favorites)
         let tempCoverBase64 = '';
 
         // --- CONTROLO DO SWIPE DE FAVORITO NO FORMULÁRIO ---
@@ -577,7 +97,6 @@
             window.setFavoriteSwipeState(!current, true);
         };
 
-        // Eventos de arrastar para o Swipe
         document.addEventListener('DOMContentLoaded', () => {
             const track = document.getElementById('modal-favorite-swipe');
             if (!track) return;
@@ -626,9 +145,51 @@
             track.addEventListener('click', () => {
                 window.toggleFavoriteSwipe();
             });
+
+            // Iniciar escuta em tempo real do Firestore (substitua "obras" pelo nome exato da sua coleção se for diferente)
+            initFirestoreListener();
         });
 
-        // Funções de controle de interface básicas (Sidebar, Modais e Categorias)
+        function initFirestoreListener() {
+            // Nota: certifique-se de que o nome da coleção abaixo ('obras' ou o que você usa) seja o mesmo do seu banco
+            onSnapshot(collection(db, "obras"), (snapshot) => {
+                mediaItems = [];
+                snapshot.forEach((docSnap) => {
+                    mediaItems.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                updateStats();
+                window.renderMediaGrid();
+            }, (error) => {
+                console.error("Erro ao carregar do Firestore:", error);
+            });
+        }
+
+        function updateStats() {
+            const total = mediaItems.length;
+            const completed = mediaItems.filter(i => i.status === 'completed').length;
+            const inProgress = mediaItems.filter(i => i.status === 'in-progress').length;
+            const planned = mediaItems.filter(i => i.status === 'planned').length;
+            const abandoned = mediaItems.filter(i => i.status === 'abandoned').length;
+            const favorites = mediaItems.filter(i => i.favorite === true).length;
+
+            if(document.getElementById('stat-acervo')) document.getElementById('stat-acervo').textContent = total;
+            if(document.getElementById('stat-completed')) document.getElementById('stat-completed').textContent = completed;
+            if(document.getElementById('stat-in-progress')) document.getElementById('stat-in-progress').textContent = inProgress;
+            if(document.getElementById('stat-planned')) document.getElementById('stat-planned').textContent = planned;
+            if(document.getElementById('stat-abandoned')) document.getElementById('stat-abandoned').textContent = abandoned;
+            if(document.getElementById('stat-favorites')) document.getElementById('stat-favorites').textContent = favorites;
+
+            // Atualizar badges do menu lateral
+            if(document.getElementById('badge-all')) document.getElementById('badge-all').textContent = total;
+            if(document.getElementById('badge-favorites')) document.getElementById('badge-favorites').textContent = favorites;
+            
+            ['anime', 'short', 'dorama', 'movie', 'book', 'series'].forEach(cat => {
+                const count = mediaItems.filter(i => i.category === cat).length;
+                const badge = document.getElementById(`badge-${cat}`);
+                if(badge) badge.textContent = count;
+            });
+        }
+
         window.openSidebar = () => {
             document.getElementById('sidebar-drawer').classList.remove('-translate-x-full');
             document.getElementById('sidebar-backdrop').classList.remove('hidden');
@@ -641,8 +202,95 @@
 
         window.switchCategory = (category) => {
             currentCategory = category;
+            currentCardFilter = null;
+            document.getElementById('filter-results-container').classList.add('hidden');
             window.closeSidebar();
             window.renderMediaGrid();
+        };
+
+        window.filterStoriesCard = (filterType) => {
+            if (filterType === 'all') {
+                currentCardFilter = null;
+                document.getElementById('filter-results-container').classList.add('hidden');
+                window.renderMediaGrid();
+                return;
+            }
+            currentCardFilter = filterType;
+            const container = document.getElementById('filter-results-container');
+            const grid = document.getElementById('filter-results-grid');
+            const titleText = document.getElementById('filter-title-text');
+            
+            let filtered = [];
+            let label = '';
+            if (filterType === 'completed') { label = 'Obras Concluídas'; filtered = mediaItems.filter(i => i.status === 'completed'); }
+            else if (filterType === 'in-progress') { label = 'Obras Em Andamento'; filtered = mediaItems.filter(i => i.status === 'in-progress'); }
+            else if (filterType === 'planned') { label = 'Quero Ver / Ler'; filtered = mediaItems.filter(i => i.status === 'planned'); }
+            else if (filterType === 'abandoned') { label = 'Obras Abandonadas'; filtered = mediaItems.filter(i => i.status === 'abandoned'); }
+            else if (filterType === 'favorites') { label = 'Obras Favoritas'; filtered = mediaItems.filter(i => i.favorite === true); }
+
+            titleText.textContent = label;
+            container.classList.remove('hidden');
+
+            grid.innerHTML = '';
+            if (filtered.length === 0) {
+                grid.innerHTML = `<p class="col-span-full text-center text-xs text-blue-300/70 py-6">Nenhum registo encontrado nesta categoria.</p>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                grid.appendChild(createMediaCardElement(item));
+            });
+        };
+
+        window.closeFilterResults = () => {
+            document.getElementById('filter-results-container').classList.add('hidden');
+            currentCardFilter = null;
+        };
+
+        function createMediaCardElement(item) {
+            const card = document.createElement('div');
+            card.className = 'glass-card rounded-xl overflow-hidden flex flex-col cursor-pointer hover:border-blue-400 transition shadow-lg group relative';
+            card.onclick = () => window.openDetailsModal(item.id);
+
+            const coverUrl = item.cover || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=600&auto=format&fit=crop';
+            
+            card.innerHTML = `
+                <div class="relative aspect-[3/4] w-full bg-blue-950/50 overflow-hidden">
+                    <img src="${coverUrl}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    ${item.favorite ? '<span class="absolute top-2 right-2 w-7 h-7 bg-rose-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white text-xs shadow-md"><i class="fa-solid fa-heart"></i></span>' : ''}
+                    ${item.rating ? `<span class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center space-x-1"><span>★</span><span>${item.rating}</span></span>` : ''}
+                </div>
+                <div class="p-2.5 flex flex-col flex-1 justify-between">
+                    <h4 class="text-xs font-bold text-white line-clamp-1">${item.title}</h4>
+                    <span class="text-[10px] text-blue-300/70 uppercase mt-1">${item.category || 'geral'}</span>
+                </div>
+            `;
+            return card;
+        }
+
+        window.renderMediaGrid = () => {
+            const grid = document.getElementById('media-grid');
+            const emptyState = document.getElementById('empty-state');
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            grid.innerHTML = '';
+
+            let filtered = mediaItems.filter(item => {
+                const matchesCategory = currentCategory === 'all' || 
+                    (currentCategory === 'favorites' ? item.favorite === true : item.category === currentCategory);
+                const matchesSearch = item.title && item.title.toLowerCase().includes(searchTerm);
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filtered.forEach(item => {
+                    grid.appendChild(createMediaCardElement(item));
+                });
+            }
         };
 
         window.openAddModal = () => {
@@ -662,13 +310,67 @@
             document.getElementById('modal-banner').classList.add('hidden');
         };
 
+        window.openDetailsModal = async (id) => {
+            const item = mediaItems.find(i => i.id === id);
+            if (!item) return;
+
+            const content = document.getElementById('details-content');
+            content.innerHTML = `
+                <div class="flex space-x-4">
+                    <img src="${item.cover || ''}" class="w-28 h-40 object-cover rounded-xl border border-blue-500/30" />
+                    <div class="space-y-1 flex-1">
+                        <h4 class="text-base font-bold text-white">${item.title}</h4>
+                        ${item.originalTitle ? `<p class="text-xs text-blue-300/70">Original: ${item.originalTitle}</p>` : ''}
+                        <p class="text-xs text-blue-200 mt-2"><strong class="text-white">Categoria:</strong> ${item.category}</p>
+                        <p class="text-xs text-blue-200"><strong class="text-white">Status:</strong> ${item.status}</p>
+                        ${item.rating ? `<p class="text-xs text-amber-400 font-semibold mt-1">★ ${item.rating}/10</p>` : ''}
+                    </div>
+                </div>
+                ${item.synopsis ? `<div><h5 class="text-xs font-bold text-blue-300 uppercase mb-1">Sinopse</h5><p class="text-xs text-gray-300 bg-[#0e1738]/50 p-3 rounded-xl">${item.synopsis}</p></div>` : ''}
+                ${item.review ? `<div><h5 class="text-xs font-bold text-blue-300 uppercase mb-1">Resenha</h5><p class="text-xs text-gray-300 bg-[#0e1738]/50 p-3 rounded-xl">${item.review}</p></div>` : ''}
+                <div class="flex justify-end space-x-2 pt-3 border-t border-blue-900/40">
+                    <button type="button" onclick="window.deleteMedia('${item.id}')" class="px-3 py-1.5 bg-rose-600/30 hover:bg-rose-600 text-rose-200 hover:text-white text-xs font-semibold rounded-xl transition cursor-pointer">Eliminar</button>
+                    <button type="button" onclick="window.closeDetailsModal()" class="px-3 py-1.5 bg-blue-950/60 text-gray-200 text-xs font-semibold rounded-xl cursor-pointer">Fechar</button>
+                </div>
+            `;
+            document.getElementById('modal-details').classList.remove('hidden');
+        };
+
         window.closeDetailsModal = () => {
             document.getElementById('modal-details').classList.add('hidden');
         };
 
-        window.renderMediaGrid = () => {
-            // Lógica de renderização dos cards na grade principal baseada nos dados do Firestore
+        window.deleteMedia = async (id) => {
+            if (confirm("Tem certeza que deseja eliminar esta obra?")) {
+                try {
+                    await deleteDoc(doc(db, "obras", id));
+                    window.closeDetailsModal();
+                } catch (error) {
+                    console.error("Erro ao eliminar:", error);
+                }
+            }
+        };
+
+        window.saveMedia = async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('form-title').value;
+            const category = document.getElementById('form-category').value;
+            const status = document.getElementById('form-status').value;
+            const synopsis = document.getElementById('form-synopsis').value;
+            const review = document.getElementById('form-review').value;
+            const rating = parseFloat(document.getElementById('form-rating').value) || null;
+            const cover = document.getElementById('form-cover-url').value || tempCoverBase64;
+            const favorite = document.getElementById('modal-favorite-swipe').getAttribute('data-is-favorite') === 'true';
+
+            const newDocData = { title, category, status, synopsis, review, rating, cover, favorite, createdAt: new Date().toISOString() };
+
+            try {
+                await addDoc(collection(db, "obras"), newDocData);
+                window.closeAddModal();
+                document.getElementById('media-form').reset();
+                tempCoverBase64 = '';
+            } catch (error) {
+                console.error("Erro ao salvar obra:", error);
+            }
         };
     </script>
-</body>
-</html>
