@@ -94,18 +94,18 @@
 2
     <!-- MENU LATERAL FLUTUANTE -->
     <aside id="sidebar-drawer" class="fixed top-0 left-0 h-full w-72 bg-[#0e1738] border-r border-blue-900/40 z-[999] transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
-       <div class="px-4 py-3 border-b border-blue-900/30 flex items-center justify-between gap-2">
-    <span id="userInfo" style="display:none;" class="text-blue-200 text-xs font-medium truncate"></span>
-    <button id="loginBtn" class="ml-auto bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-md shrink-0">
-        <i class="fa-solid fa-user-circle"></i>
-        <span id="loginBtnText">Entrar com Google</span>
-    </button>
-       </div>
         <div class="p-5 border-b border-blue-900/30 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-moon text-blue-400 text-2xl"></i>
                 <h1 class="font-bold text-lg text-white">Blue-Moon</h1>
             </div>
+            <div class="px-4 py-3 border-b border-blue-900/30 flex items-center justify-between gap-2">
+    <span id="userInfo" style="display:none;" class="text-blue-200 text-xs font-medium truncate"></span>
+    <button id="loginBtn" class="ml-auto bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-md shrink-0">
+        <i class="fa-solid fa-user-circle"></i>
+        <span id="loginBtnText">Entrar com Google</span>
+    </button>
+</div>
             <button onclick="window.closeSidebar()" class="p-2 text-gray-400 hover:text-white rounded-lg cursor-pointer">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
