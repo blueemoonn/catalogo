@@ -2,6 +2,7 @@
   "name": "Blue-Moon | Sanctuary of Stories",
   "short_name": "Blue-Moon",
   "description": "Sanctuary of Stories",
+  "id": "/catalogo/",
   "start_url": "/catalogo/",
   "scope": "/catalogo/",
   "display": "standalone",
@@ -10,8 +11,15 @@
   "icons": [
     {
       "src": "/catalogo/lua-icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/catalogo/lua-icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
